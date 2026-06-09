@@ -1,6 +1,7 @@
 package com.xiaoyuanzhu.deepseekwidget
 
 import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.Composable
@@ -9,7 +10,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.updateAll
@@ -26,17 +27,43 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class DeepSeekWidgetReceiver : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget: GlanceAppWidget = DeepSeekWidget()
+class DeepSeekWidgetReceiver : AppWidgetProvider() {
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
+        scope.launch {
+            try {
+                DeepSeekWidget().updateAll(context)
+            } catch (_: Exception) { }
+        }
         DeepSeekWidgetWorker.schedule(context)
+    }
+
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        super.onDeleted(context, appWidgetIds)
+        scope.launch {
+            try {
+                val widget = DeepSeekWidget()
+                val manager = GlanceAppWidgetManager(context)
+                for (id in appWidgetIds) {
+                    try {
+                        val glanceId = manager.getGlanceIdBy(appWidgetId = id)
+                        widget.onDelete(context, glanceId)
+                    } catch (_: Exception) { }
+                }
+            } catch (_: Exception) { }
+        }
     }
 
     companion object {
@@ -49,7 +76,11 @@ class DeepSeekWidgetReceiver : GlanceAppWidgetReceiver() {
 class DeepSeekWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val usage = WidgetPrefs.usageFlow(context).first()
+        val usage = try {
+            WidgetPrefs.usageFlow(context).first()
+        } catch (e: Exception) {
+            UsageSnapshot(error = e.message, lastUpdated = System.currentTimeMillis())
+        }
 
         provideContent {
             GlanceTheme {
