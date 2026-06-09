@@ -1,7 +1,6 @@
 package com.xiaoyuanzhu.deepseekwidget
 
 import android.appwidget.AppWidgetManager
-import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.Composable
@@ -10,7 +9,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.updateAll
@@ -27,43 +26,17 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class DeepSeekWidgetReceiver : AppWidgetProvider() {
-
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+class DeepSeekWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget: GlanceAppWidget = DeepSeekWidget()
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
-        scope.launch {
-            try {
-                DeepSeekWidget().updateAll(context)
-            } catch (_: Exception) { }
-        }
         DeepSeekWidgetWorker.schedule(context)
-    }
-
-    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
-        super.onDeleted(context, appWidgetIds)
-        scope.launch {
-            try {
-                val widget = DeepSeekWidget()
-                val manager = GlanceAppWidgetManager(context)
-                for (id in appWidgetIds) {
-                    try {
-                        val glanceId = manager.getGlanceIdBy(appWidgetId = id)
-                        widget.onDelete(context, glanceId)
-                    } catch (_: Exception) { }
-                }
-            } catch (_: Exception) { }
-        }
     }
 
     companion object {
@@ -109,7 +82,6 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
                 context.startActivity(intent)
             }
     ) {
-        // Title row
         Row(
             modifier = GlanceModifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -132,7 +104,6 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
 
         Spacer(modifier = GlanceModifier.height(12))
 
-        // Balance display
         if (usage.error != null && usage.totalBalance == "0") {
             Text(
                 text = usage.error,
@@ -172,7 +143,6 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
             }
         }
 
-        // Usage stats (from dashboard cookie)
         if (usage.monthlyTokens > 0) {
             Spacer(modifier = GlanceModifier.height(6))
             Row {
@@ -198,7 +168,6 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
 
         Spacer(modifier = GlanceModifier.height(8))
 
-        // Last updated
         Text(
             text = if (usage.lastUpdated > 0) {
                 "更新于 ${formatTime(usage.lastUpdated)}"
