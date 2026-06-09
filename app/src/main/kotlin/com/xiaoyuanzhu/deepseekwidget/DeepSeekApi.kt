@@ -22,11 +22,11 @@ data class BalanceResponse(
 )
 
 data class UsageSnapshot(
-    val totalBalance: String,
-    val grantedBalance: String,
-    val toppedUpBalance: String,
-    val currency: String,
-    val lastUpdated: Long,
+    val totalBalance: String = "0",
+    val grantedBalance: String = "0",
+    val toppedUpBalance: String = "0",
+    val currency: String = "—",
+    val lastUpdated: Long = 0L,
     val error: String? = null,
     val monthlyTokens: Long = 0,
     val monthlyCost: Double = 0.0

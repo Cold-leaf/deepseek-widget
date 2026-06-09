@@ -3,13 +3,10 @@ package com.xiaoyuanzhu.deepseekwidget
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
-import android.widget.Toast
-import androidx.glance.ColorFilter
+import androidx.compose.runtime.Composable
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
-import androidx.glance.Image
-import androidx.glance.ImageProvider
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
@@ -24,7 +21,6 @@ import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
-import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -62,14 +58,12 @@ class DeepSeekWidget : GlanceAppWidget() {
         }
     }
 
-    override suspend fun onDelete(context: Context, glanceIds: Set<GlanceId>) {
-        if (glanceIds.isEmpty()) {
-            DeepSeekWidgetWorker.cancel(context)
-        }
+    override suspend fun onDelete(context: Context, glanceId: GlanceId) {
+        // Worker keeps running; harmless if no widgets exist
     }
 }
 
-@androidx.glance.layout.Composable
+@Composable
 private fun WidgetContent(context: Context, usage: UsageSnapshot) {
     Column(
         modifier = GlanceModifier
@@ -182,7 +176,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
             },
             style = TextStyle(
                 color = ColorProvider(0xFF6366F1.toInt()),
-                fontWeight = FontWeight.Light
+                fontWeight = FontWeight.Normal
             )
         )
     }

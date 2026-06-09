@@ -28,6 +28,10 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Declare inputs here so they're accessible from scope.launch below
+        var keyInput: EditText? = null
+        var cookieInput: EditText? = null
+
         val scrollView = ScrollView(this)
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -46,7 +50,7 @@ class MainActivity : Activity() {
             })
             addView(space(8))
 
-            val keyInput = EditText(this@MainActivity).apply {
+            keyInput = EditText(this@MainActivity).apply {
                 hint = "sk-..."
                 inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
                 setPadding(dp(12), dp(10), dp(12), dp(10))
@@ -56,7 +60,7 @@ class MainActivity : Activity() {
 
             addView(space(8))
             addView(primaryButton("保存") {
-                val key = keyInput.text.toString().trim()
+                val key = keyInput?.text?.toString()?.trim() ?: ""
                 scope.launch {
                     WidgetPrefs.saveApiKey(this@MainActivity, key)
                     DeepSeekWidgetWorker.schedule(this@MainActivity)
@@ -81,7 +85,7 @@ class MainActivity : Activity() {
             ))
             addView(space(8))
 
-            val cookieInput = EditText(this@MainActivity).apply {
+            cookieInput = EditText(this@MainActivity).apply {
                 hint = "session_id=xxx; token=xxx; ..."
                 inputType = InputType.TYPE_CLASS_TEXT
                 setPadding(dp(12), dp(10), dp(12), dp(10))
@@ -93,7 +97,7 @@ class MainActivity : Activity() {
 
             addView(space(8))
             addView(primaryButton("保存", 0xFF7C3AED.toInt()) {
-                val cookie = cookieInput.text.toString().trim()
+                val cookie = cookieInput?.text?.toString()?.trim() ?: ""
                 scope.launch {
                     WidgetPrefs.saveDashboardCookie(this@MainActivity, cookie)
                     Toast.makeText(this@MainActivity, "Cookie已保存", Toast.LENGTH_SHORT).show()
@@ -156,9 +160,9 @@ class MainActivity : Activity() {
         // Load saved data
         scope.launch {
             val savedKey = WidgetPrefs.getApiKey(this@MainActivity)
-            keyInput.setText(savedKey ?: "")
+            keyInput?.setText(savedKey ?: "")
             val savedCookie = WidgetPrefs.getDashboardCookie(this@MainActivity)
-            cookieInput.setText(savedCookie ?: "")
+            cookieInput?.setText(savedCookie ?: "")
             WidgetPrefs.usageFlow(this@MainActivity).collect {
                 updateBalanceUI(balanceText, detailText, usageText, errorText, timeText, loadingBar, it)
             }
