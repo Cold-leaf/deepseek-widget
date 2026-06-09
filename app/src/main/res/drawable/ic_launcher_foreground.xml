@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Brain/neural network simplified icon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,24 C46,24 40,30 40,38 C40,42 42,46 46,48 C42,50 40,54 40,58 C40,66 46,72 54,72 C62,72 68,66 68,58 C68,54 66,50 62,48 C66,46 68,42 68,38 C68,30 62,24 54,24Z M54,44 C50.7,44 48,46.7 48,50 C48,53.3 50.7,56 54,56 C57.3,56 60,53.3 60,50 C60,46.7 57.3,44 54,44Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M50,62 L58,62 L58,68 L54,72 L50,68 Z" />
+    <!-- Connection lines -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:pathData="M40,38 L30,30 M68,38 L78,30 M40,58 L30,66 M68,58 L78,66 M46,72 L42,82 M62,72 L66,82" />
+</vector>

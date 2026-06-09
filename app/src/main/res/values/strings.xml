@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DeepSeek用量</string>
+    <string name="widget_name">DeepSeek用量卡片</string>
+    <string name="widget_description">实时显示DeepSeek API余额和用量</string>
+</resources>
