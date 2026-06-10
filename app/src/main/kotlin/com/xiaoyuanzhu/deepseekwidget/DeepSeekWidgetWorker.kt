@@ -19,31 +19,32 @@ class DeepSeekWidgetWorker(
 
     override suspend fun doWork(): Result {
         val apiKey = WidgetPrefs.getApiKey(applicationContext)
-        if (apiKey.isNullOrBlank()) {
+        val dashboardCookie = WidgetPrefs.getDashboardCookie(applicationContext)
+
+        if (apiKey.isNullOrBlank() && dashboardCookie.isNullOrBlank()) {
             WidgetPrefs.saveUsage(
                 applicationContext,
-                UsageSnapshot(error = "未设置API Key", lastUpdated = System.currentTimeMillis())
+                UsageSnapshot(error = "未设置API Key或Cookie", lastUpdated = System.currentTimeMillis())
             )
             return Result.failure()
         }
 
-        val dashboardCookie = WidgetPrefs.getDashboardCookie(applicationContext)
-
-        // Fetch balance and usage stats in parallel
         var balanceResult: UsageSnapshot? = null
         var usageResult: UsageStats? = null
 
         withContext(Dispatchers.IO) {
-            val balanceJob = async { DeepSeekApi.fetchBalance(apiKey) }
+            val balanceJob = if (!apiKey.isNullOrBlank()) {
+                async { DeepSeekApi.fetchBalance(apiKey) }
+            } else null
             val usageJob = if (!dashboardCookie.isNullOrBlank()) {
                 async { DeepSeekUsageApi.fetchAll(dashboardCookie) }
             } else null
 
-            balanceResult = balanceJob.await()
+            balanceResult = balanceJob?.await()
             usageResult = usageJob?.await()
         }
 
-        val usage = balanceResult!!
+        val usage = balanceResult ?: UsageSnapshot(lastUpdated = System.currentTimeMillis())
         WidgetPrefs.saveUsage(applicationContext, usage)
 
         if (usageResult != null) {

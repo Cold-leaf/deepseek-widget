@@ -95,7 +95,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
                     color = ColorProvider(R.color.widget_error)
                 )
             )
-        } else {
+        } else if (usage.totalBalance != "0") {
             Text(
                 text = "余额 ${usage.totalBalance} ${usage.currency}",
                 style = TextStyle(
@@ -116,7 +116,9 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
                     modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
                 )
             }
-            if (usage.monthlyTokens > 0) {
+        }
+
+        if (usage.monthlyTokens > 0) {
                 Text(
                     text = "本月 ${formatTokens(usage.monthlyTokens)} tokens  ¥${"%.2f".format(usage.monthlyCost)}",
                     style = TextStyle(
@@ -127,7 +129,6 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
                     modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
                 )
             }
-        }
 
         Text(
             text = if (usage.lastUpdated > 0) "更新于 ${formatTime(usage.lastUpdated)}" else "等待首次加载...",

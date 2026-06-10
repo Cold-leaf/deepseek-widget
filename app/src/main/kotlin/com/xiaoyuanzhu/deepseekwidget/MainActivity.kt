@@ -172,14 +172,16 @@ class MainActivity : Activity() {
         refreshBtn.setOnClickListener {
             scope.launch {
                 val api = WidgetPrefs.getApiKey(this@MainActivity)
-                if (api.isNullOrBlank()) {
-                    Toast.makeText(this@MainActivity, "请先设置API Key", Toast.LENGTH_SHORT).show()
+                val cookie = WidgetPrefs.getDashboardCookie(this@MainActivity)
+                if (api.isNullOrBlank() && cookie.isNullOrBlank()) {
+                    Toast.makeText(this@MainActivity, "请先设置API Key或Cookie", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
                 loadingBar.visibility = View.VISIBLE
-                val cookie = WidgetPrefs.getDashboardCookie(this@MainActivity)
                 val result = withContext(Dispatchers.IO) {
-                    val b = DeepSeekApi.fetchBalance(api)
+                    val b = if (!api.isNullOrBlank()) {
+                        DeepSeekApi.fetchBalance(api)
+                    } else UsageSnapshot(lastUpdated = System.currentTimeMillis())
                     if (!cookie.isNullOrBlank()) {
                         val s = DeepSeekUsageApi.fetchAll(cookie)
                         WidgetPrefs.saveUsageStats(this@MainActivity, s)
