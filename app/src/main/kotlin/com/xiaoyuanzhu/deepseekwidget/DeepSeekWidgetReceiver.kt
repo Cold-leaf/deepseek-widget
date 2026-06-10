@@ -14,10 +14,12 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.updateAll
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -79,8 +81,10 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
 
     Text(
         text = lines.joinToString("\n"),
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Normal,
+        style = TextStyle(
+            fontSize = TextUnit(14f, TextUnitType.SP),
+            fontWeight = FontWeight.Normal
+        ),
         modifier = GlanceModifier
             .clickable {
                 val intent = Intent(context, MainActivity::class.java).apply {
