@@ -10,22 +10,14 @@ import androidx.glance.GlanceTheme
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
-import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.updateAll
-import androidx.glance.background
-import androidx.glance.layout.Alignment
-import androidx.glance.layout.Column
-import androidx.glance.layout.Row
-import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxWidth
-import androidx.glance.layout.height
 import androidx.glance.layout.padding
-import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
-import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -69,122 +61,36 @@ class DeepSeekWidget : GlanceAppWidget() {
 
 @Composable
 private fun WidgetContent(context: Context, usage: UsageSnapshot) {
-    Column(
+    val lines = buildList {
+        add("🧠 DeepSeek")
+        if (usage.error != null && usage.totalBalance == "0") {
+            add("⚠ ${usage.error}")
+        } else {
+            add("余额 ${usage.totalBalance} ${usage.currency}")
+        }
+        if (usage.toppedUpBalance != "0" || usage.grantedBalance != "0") {
+            add("充值 ${usage.toppedUpBalance}  赠送 ${usage.grantedBalance}")
+        }
+        if (usage.monthlyTokens > 0) {
+            add("本月 ${formatTokens(usage.monthlyTokens)} tokens  ¥${"%.2f".format(usage.monthlyCost)}")
+        }
+        add(if (usage.lastUpdated > 0) "更新于 ${formatTime(usage.lastUpdated)}" else "等待首次加载...")
+    }
+
+    Text(
+        text = lines.joinToString("\n"),
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Normal,
         modifier = GlanceModifier
-            .fillMaxWidth()
-            .background(ColorProvider(0xFF1E1B4B.toInt()))
-            .cornerRadius(R.dimen.glance_radius_16)
-            .padding(R.dimen.glance_padding_16)
             .clickable {
                 val intent = Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
                 context.startActivity(intent)
             }
-    ) {
-        Row(
-            modifier = GlanceModifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "🧠 DeepSeek",
-                style = TextStyle(
-                    color = ColorProvider(0xFFFFFFFF.toInt()),
-                    fontWeight = FontWeight.Bold
-                )
-            )
-            Spacer(modifier = GlanceModifier.width(R.dimen.glance_spacer_8))
-            if (usage.error != null) {
-                Text(
-                    text = "⚠️",
-                    style = TextStyle(color = ColorProvider(0xFFFFD700.toInt()))
-                )
-            }
-        }
-
-        Spacer(modifier = GlanceModifier.height(R.dimen.glance_spacer_12))
-
-        if (usage.error != null && usage.totalBalance == "0") {
-            Text(
-                text = usage.error,
-                style = TextStyle(
-                    color = ColorProvider(0xFFFF6B6B.toInt()),
-                    fontWeight = FontWeight.Medium
-                )
-            )
-        } else {
-            Text(
-                text = formatBalance(usage.totalBalance, usage.currency),
-                style = TextStyle(
-                    color = ColorProvider(0xFFA5B4FC.toInt()),
-                    fontWeight = FontWeight.Bold
-                )
-            )
-        }
-
-        if (usage.toppedUpBalance != "0" || usage.grantedBalance != "0") {
-            Spacer(modifier = GlanceModifier.height(R.dimen.glance_spacer_4))
-            Row {
-                Text(
-                    text = "充值 ${usage.toppedUpBalance}",
-                    style = TextStyle(
-                        color = ColorProvider(0xFF818CF8.toInt()),
-                        fontWeight = FontWeight.Normal
-                    )
-                )
-                Spacer(modifier = GlanceModifier.width(R.dimen.glance_spacer_12))
-                Text(
-                    text = "赠送 ${usage.grantedBalance}",
-                    style = TextStyle(
-                        color = ColorProvider(0xFF818CF8.toInt()),
-                        fontWeight = FontWeight.Normal
-                    )
-                )
-            }
-        }
-
-        if (usage.monthlyTokens > 0) {
-            Spacer(modifier = GlanceModifier.height(R.dimen.glance_spacer_6))
-            Row {
-                Text(
-                    text = "本月 ${formatTokens(usage.monthlyTokens)} tokens",
-                    style = TextStyle(
-                        color = ColorProvider(0xFFA78BFA.toInt()),
-                        fontWeight = FontWeight.Medium
-                    )
-                )
-                if (usage.monthlyCost > 0) {
-                    Spacer(modifier = GlanceModifier.width(R.dimen.glance_spacer_12))
-                    Text(
-                        text = "¥${"%.2f".format(usage.monthlyCost)}",
-                        style = TextStyle(
-                            color = ColorProvider(0xFFA78BFA.toInt()),
-                            fontWeight = FontWeight.Medium
-                        )
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = GlanceModifier.height(R.dimen.glance_spacer_8))
-
-        Text(
-            text = if (usage.lastUpdated > 0) {
-                "更新于 ${formatTime(usage.lastUpdated)}"
-            } else {
-                "等待首次加载..."
-            },
-            style = TextStyle(
-                color = ColorProvider(0xFF6366F1.toInt()),
-                fontWeight = FontWeight.Normal
-            )
-        )
-    }
-}
-
-private fun formatBalance(balance: String, currency: String): String {
-    if (balance == "0" || balance == "0.00") return "—"
-    return "余额 $balance $currency"
+            .fillMaxWidth()
+            .padding(R.dimen.glance_padding_16)
+    )
 }
 
 private fun formatTokens(count: Long): String {
