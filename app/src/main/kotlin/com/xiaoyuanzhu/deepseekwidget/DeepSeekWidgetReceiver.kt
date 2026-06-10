@@ -12,6 +12,7 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.updateAll
+import androidx.glance.background
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.compose.ui.unit.sp
@@ -86,6 +87,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
             color = ColorProvider(R.color.widget_text)
         ),
         modifier = GlanceModifier
+            .background(ColorProvider(R.color.widget_bg))
             .clickable {
                 val intent = Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
