@@ -83,7 +83,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
         style = TextStyle(
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal,
-            color = ColorProvider(0xFFA5B4FC.toInt())
+            color = ColorProvider(R.color.widget_text)
         ),
         modifier = GlanceModifier
             .clickable {
