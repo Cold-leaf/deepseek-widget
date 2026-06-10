@@ -178,6 +178,7 @@ class MainActivity : Activity() {
                     return@launch
                 }
                 loadingBar.visibility = View.VISIBLE
+                WidgetPrefs.clearError(this@MainActivity)
                 val result = withContext(Dispatchers.IO) {
                     val b = if (!api.isNullOrBlank()) {
                         DeepSeekApi.fetchBalance(api)

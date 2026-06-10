@@ -52,6 +52,13 @@ object DeepSeekUsageApi {
             val amounts = fetchUsageAmount(dashboardCookie, month, year)
             val costs = fetchUsageCost(dashboardCookie, month, year)
 
+            if (summary.first.isEmpty() && amounts.isEmpty() && costs.isEmpty()) {
+                return UsageStats(
+                    fetched = true,
+                    error = "Cookie 无效或 API 端点已变更，请重新获取 Cookie"
+                )
+            }
+
             val dailyCostMap = costs.associate { it.first to it.second }
             val dailyList = amounts.map { (date, tokens) ->
                 DailyAmount(date, tokens, dailyCostMap[date] ?: 0.0)

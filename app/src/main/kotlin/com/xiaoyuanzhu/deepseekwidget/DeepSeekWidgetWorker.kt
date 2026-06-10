@@ -18,6 +18,8 @@ class DeepSeekWidgetWorker(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
+        WidgetPrefs.clearError(applicationContext)
+
         val apiKey = WidgetPrefs.getApiKey(applicationContext)
         val dashboardCookie = WidgetPrefs.getDashboardCookie(applicationContext)
 

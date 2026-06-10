@@ -61,8 +61,14 @@ object WidgetPrefs {
             it[KEY_TOPPED_UP_BALANCE] = usage.toppedUpBalance
             it[KEY_CURRENCY] = usage.currency
             it[KEY_LAST_UPDATED] = usage.lastUpdated
-            if (usage.error != null) it[KEY_ERROR] = usage.error else it.remove(KEY_ERROR)
+            if (usage.error != null) it[KEY_ERROR] = usage.error
         }
+    }
+
+    // ---- Clear error ----
+
+    suspend fun clearError(context: Context) {
+        context.dataStore.edit { it.remove(KEY_ERROR) }
     }
 
     // ---- Usage stats (from dashboard cookie) ----
@@ -74,7 +80,7 @@ object WidgetPrefs {
             if (stats.dailyAmounts.isNotEmpty()) {
                 it[KEY_USAGE_DAYS] = json.encodeToString(stats.dailyAmounts)
             }
-            if (stats.error != null) it[KEY_ERROR] = stats.error else it.remove(KEY_ERROR)
+            if (stats.error != null) it[KEY_ERROR] = stats.error
         }
     }
 
