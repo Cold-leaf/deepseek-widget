@@ -26,7 +26,6 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import androidx.glance.unit.Dp
 import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -74,8 +73,8 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
         modifier = GlanceModifier
             .fillMaxWidth()
             .background(ColorProvider(0xFF1E1B4B.toInt()))
-            .cornerRadius(Dp(16f))
-            .padding(Dp(16f))
+            .cornerRadius(R.dimen.glance_radius_16)
+            .padding(R.dimen.glance_padding_16)
             .clickable {
                 val intent = Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -94,7 +93,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
                     fontWeight = FontWeight.Bold
                 )
             )
-            Spacer(modifier = GlanceModifier.width(Dp(8f)))
+            Spacer(modifier = GlanceModifier.width(R.dimen.glance_spacer_8))
             if (usage.error != null) {
                 Text(
                     text = "⚠️",
@@ -103,7 +102,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
             }
         }
 
-        Spacer(modifier = GlanceModifier.height(Dp(12f)))
+        Spacer(modifier = GlanceModifier.height(R.dimen.glance_spacer_12))
 
         if (usage.error != null && usage.totalBalance == "0") {
             Text(
@@ -124,7 +123,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
         }
 
         if (usage.toppedUpBalance != "0" || usage.grantedBalance != "0") {
-            Spacer(modifier = GlanceModifier.height(Dp(4f)))
+            Spacer(modifier = GlanceModifier.height(R.dimen.glance_spacer_4))
             Row {
                 Text(
                     text = "充值 ${usage.toppedUpBalance}",
@@ -133,7 +132,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
                         fontWeight = FontWeight.Normal
                     )
                 )
-                Spacer(modifier = GlanceModifier.width(Dp(12f)))
+                Spacer(modifier = GlanceModifier.width(R.dimen.glance_spacer_12))
                 Text(
                     text = "赠送 ${usage.grantedBalance}",
                     style = TextStyle(
@@ -145,7 +144,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
         }
 
         if (usage.monthlyTokens > 0) {
-            Spacer(modifier = GlanceModifier.height(Dp(6f)))
+            Spacer(modifier = GlanceModifier.height(R.dimen.glance_spacer_6))
             Row {
                 Text(
                     text = "本月 ${formatTokens(usage.monthlyTokens)} tokens",
@@ -155,7 +154,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
                     )
                 )
                 if (usage.monthlyCost > 0) {
-                    Spacer(modifier = GlanceModifier.width(Dp(12f)))
+                    Spacer(modifier = GlanceModifier.width(R.dimen.glance_spacer_12))
                     Text(
                         text = "¥${"%.2f".format(usage.monthlyCost)}",
                         style = TextStyle(
@@ -167,7 +166,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
             }
         }
 
-        Spacer(modifier = GlanceModifier.height(Dp(8f)))
+        Spacer(modifier = GlanceModifier.height(R.dimen.glance_spacer_8))
 
         Text(
             text = if (usage.lastUpdated > 0) {

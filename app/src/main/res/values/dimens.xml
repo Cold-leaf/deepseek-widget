@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="glance_padding_16">16dp</dimen>
+    <dimen name="glance_radius_16">16dp</dimen>
+    <dimen name="glance_spacer_4">4dp</dimen>
+    <dimen name="glance_spacer_6">6dp</dimen>
+    <dimen name="glance_spacer_8">8dp</dimen>
+    <dimen name="glance_spacer_12">12dp</dimen>
+</resources>
