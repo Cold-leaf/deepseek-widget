@@ -14,8 +14,7 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.updateAll
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
+import androidx.compose.ui.unit.sp
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -82,7 +81,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
     Text(
         text = lines.joinToString("\n"),
         style = TextStyle(
-            fontSize = TextUnit(14f, TextUnitType.SP),
+            fontSize = 14.sp,
             fontWeight = FontWeight.Normal
         ),
         modifier = GlanceModifier
