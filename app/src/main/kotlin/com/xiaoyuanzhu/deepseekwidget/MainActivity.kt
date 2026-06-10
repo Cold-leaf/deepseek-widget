@@ -192,7 +192,6 @@ class MainActivity : Activity() {
                 WidgetPrefs.saveUsage(this@MainActivity, result)
                 DeepSeekWidgetReceiver.updateWidget(this@MainActivity)
                 loadingBar.visibility = View.GONE
-                updateBalanceUI(balanceText, detailText, usageText, errorText, timeText, loadingBar, result)
             }
         }
     }
@@ -214,6 +213,17 @@ class MainActivity : Activity() {
             errorText.visibility = View.VISIBLE
             detailText.visibility = View.GONE
             usageText.visibility = View.GONE
+        } else if (usage.totalBalance == "0" || usage.currency == "—") {
+            balanceText.text = "设置 API Key"
+            errorText.visibility = View.GONE
+            detailText.visibility = View.GONE
+            if (usage.monthlyTokens > 0) {
+                val costStr = if (usage.monthlyCost > 0) "  |  ¥${"%.2f".format(usage.monthlyCost)}" else ""
+                usageText.text = "本月 ${formatTokens(usage.monthlyTokens)} tokens$costStr"
+                usageText.visibility = View.VISIBLE
+            } else {
+                usageText.visibility = View.GONE
+            }
         } else {
             balanceText.text = "${usage.totalBalance} ${usage.currency}"
             errorText.visibility = View.GONE

@@ -127,11 +127,23 @@ object DeepSeekUsageApi {
     private fun <T> parseDataList(rawJson: String, mapper: (kotlinx.serialization.json.JsonElement) -> T?): List<T> {
         val root = json.parseToJsonElement(rawJson).jsonObject
         val data = root["data"] ?: return emptyList()
+        if (data is kotlinx.serialization.json.JsonNull) return emptyList()
         return when {
-            data is kotlinx.serialization.json.JsonArray -> data.mapNotNull { mapper(it) }
-            data.jsonObject["list"] != null -> data.jsonObject["list"]!!.jsonArray.mapNotNull { mapper(it) }
-            data.jsonObject["items"] != null -> data.jsonObject["items"]!!.jsonArray.mapNotNull { mapper(it) }
-            data.jsonObject["records"] != null -> data.jsonObject["records"]!!.jsonArray.mapNotNull { mapper(it) }
+            data is kotlinx.serialization.json.JsonArray -> data.mapNotNull {
+                if (it is kotlinx.serialization.json.JsonNull) null else mapper(it)
+            }
+            data.jsonObject["list"]?.takeIf { it !is kotlinx.serialization.json.JsonNull }?.jsonArray != null ->
+                data.jsonObject["list"]!!.jsonArray.mapNotNull {
+                    if (it is kotlinx.serialization.json.JsonNull) null else mapper(it)
+                }
+            data.jsonObject["items"]?.takeIf { it !is kotlinx.serialization.json.JsonNull }?.jsonArray != null ->
+                data.jsonObject["items"]!!.jsonArray.mapNotNull {
+                    if (it is kotlinx.serialization.json.JsonNull) null else mapper(it)
+                }
+            data.jsonObject["records"]?.takeIf { it !is kotlinx.serialization.json.JsonNull }?.jsonArray != null ->
+                data.jsonObject["records"]!!.jsonArray.mapNotNull {
+                    if (it is kotlinx.serialization.json.JsonNull) null else mapper(it)
+                }
             else -> emptyList()
         }
     }
