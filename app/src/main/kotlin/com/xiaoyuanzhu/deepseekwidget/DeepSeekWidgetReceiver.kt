@@ -13,6 +13,7 @@ import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.updateAll
 import androidx.glance.background
+import androidx.glance.layout.Column
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.compose.ui.unit.sp
@@ -63,29 +64,7 @@ class DeepSeekWidget : GlanceAppWidget() {
 
 @Composable
 private fun WidgetContent(context: Context, usage: UsageSnapshot) {
-    val lines = buildList {
-        add("🧠 DeepSeek")
-        if (usage.error != null && usage.totalBalance == "0") {
-            add("⚠ ${usage.error}")
-        } else {
-            add("余额 ${usage.totalBalance} ${usage.currency}")
-        }
-        if (usage.toppedUpBalance != "0" || usage.grantedBalance != "0") {
-            add("充值 ${usage.toppedUpBalance}  赠送 ${usage.grantedBalance}")
-        }
-        if (usage.monthlyTokens > 0) {
-            add("本月 ${formatTokens(usage.monthlyTokens)} tokens  ¥${"%.2f".format(usage.monthlyCost)}")
-        }
-        add(if (usage.lastUpdated > 0) "更新于 ${formatTime(usage.lastUpdated)}" else "等待首次加载...")
-    }
-
-    Text(
-        text = lines.joinToString("\n"),
-        style = TextStyle(
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Normal,
-            color = ColorProvider(R.color.widget_text)
-        ),
+    Column(
         modifier = GlanceModifier
             .background(ColorProvider(R.color.widget_bg))
             .clickable {
@@ -96,7 +75,69 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
             }
             .fillMaxWidth()
             .padding(R.dimen.glance_padding_16)
-    )
+    ) {
+        Text(
+            text = "🧠 DeepSeek",
+            style = TextStyle(
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = ColorProvider(R.color.widget_title)
+            ),
+            modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
+        )
+
+        if (usage.error != null && usage.totalBalance == "0") {
+            Text(
+                text = "⚠ ${usage.error}",
+                style = TextStyle(
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = ColorProvider(R.color.widget_error)
+                )
+            )
+        } else {
+            Text(
+                text = "余额 ${usage.totalBalance} ${usage.currency}",
+                style = TextStyle(
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ColorProvider(R.color.widget_text)
+                ),
+                modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
+            )
+            if (usage.toppedUpBalance != "0" || usage.grantedBalance != "0") {
+                Text(
+                    text = "充值 ${usage.toppedUpBalance}  赠送 ${usage.grantedBalance}",
+                    style = TextStyle(
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = ColorProvider(R.color.widget_detail)
+                    ),
+                    modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
+                )
+            }
+            if (usage.monthlyTokens > 0) {
+                Text(
+                    text = "本月 ${formatTokens(usage.monthlyTokens)} tokens  ¥${"%.2f".format(usage.monthlyCost)}",
+                    style = TextStyle(
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = ColorProvider(R.color.widget_usage)
+                    ),
+                    modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
+                )
+            }
+        }
+
+        Text(
+            text = if (usage.lastUpdated > 0) "更新于 ${formatTime(usage.lastUpdated)}" else "等待首次加载...",
+            style = TextStyle(
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Normal,
+                color = ColorProvider(R.color.widget_time)
+            )
+        )
+    }
 }
 
 private fun formatTokens(count: Long): String {
