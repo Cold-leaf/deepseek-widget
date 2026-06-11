@@ -33,6 +33,7 @@ class DeepSeekWidgetWorker(
 
         var balanceResult: UsageSnapshot? = null
         var usageResult: UsageStats? = null
+        var tokenError: String? = null
 
         withContext(Dispatchers.IO) {
             val balanceJob = if (!apiKey.isNullOrBlank()) {
@@ -45,6 +46,19 @@ class DeepSeekWidgetWorker(
             balanceResult = balanceJob?.await()
             usageResult = usageJob?.await()
         }
+
+        // Determine token status
+        if (usageToken.isNullOrBlank()) {
+            tokenError = "未填写用法Token"
+        } else if (usageResult != null) {
+            if (usageResult.error != null) {
+                tokenError = usageResult.error
+            } else if (usageResult.totalTokensMonth == 0L && usageResult.fetched) {
+                tokenError = "Token 无效或已过期"
+            }
+        }
+
+        WidgetPrefs.saveTokenError(applicationContext, tokenError)
 
         val usage = balanceResult ?: UsageSnapshot(lastUpdated = System.currentTimeMillis())
         WidgetPrefs.saveUsage(applicationContext, usage)

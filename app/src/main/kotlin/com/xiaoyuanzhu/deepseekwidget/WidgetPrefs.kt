@@ -26,6 +26,7 @@ object WidgetPrefs {
     private val KEY_CURRENCY = stringPreferencesKey("currency")
     private val KEY_LAST_UPDATED = longPreferencesKey("last_updated")
     private val KEY_ERROR = stringPreferencesKey("error")
+    private val KEY_TOKEN_ERROR = stringPreferencesKey("token_error")
 
     private val KEY_USAGE_TOKENS = longPreferencesKey("usage_tokens_month")
     private val KEY_USAGE_COST = stringPreferencesKey("usage_cost_month")
@@ -75,7 +76,19 @@ object WidgetPrefs {
     // ---- Clear error ----
 
     suspend fun clearError(context: Context) {
-        context.dataStore.edit { it.remove(KEY_ERROR) }
+        context.dataStore.edit {
+            it.remove(KEY_ERROR)
+            it.remove(KEY_TOKEN_ERROR)
+        }
+    }
+
+    // ---- Token error ----
+
+    suspend fun saveTokenError(context: Context, tokenError: String?) {
+        context.dataStore.edit {
+            if (tokenError != null) it[KEY_TOKEN_ERROR] = tokenError
+            else it.remove(KEY_TOKEN_ERROR)
+        }
     }
 
     // ---- Usage stats (from dashboard cookie) ----
@@ -110,6 +123,7 @@ object WidgetPrefs {
                 currency = prefs[KEY_CURRENCY] ?: "—",
                 lastUpdated = prefs[KEY_LAST_UPDATED] ?: 0L,
                 error = prefs[KEY_ERROR],
+                tokenError = prefs[KEY_TOKEN_ERROR],
                 monthlyTokens = prefs[KEY_USAGE_TOKENS] ?: 0L,
                 monthlyCost = prefs[KEY_USAGE_COST]?.toDoubleOrNull() ?: 0.0,
                 todayTokens = prefs[KEY_TODAY_TOKENS] ?: 0L,

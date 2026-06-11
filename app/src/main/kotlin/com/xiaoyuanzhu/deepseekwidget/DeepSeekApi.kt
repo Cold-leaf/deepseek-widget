@@ -31,6 +31,7 @@ data class UsageSnapshot(
     val currency: String = "—",
     val lastUpdated: Long = 0L,
     val error: String? = null,
+    val tokenError: String? = null,
     val monthlyTokens: Long = 0,
     val monthlyCost: Double = 0.0,
     val todayTokens: Long = 0,

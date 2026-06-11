@@ -180,10 +180,19 @@ class MainActivity : Activity() {
                     val b = if (!api.isNullOrBlank()) {
                         DeepSeekApi.fetchBalance(api)
                     } else UsageSnapshot(lastUpdated = System.currentTimeMillis())
+                    var tokenErr: String? = null
                     if (!token.isNullOrBlank()) {
                         val s = DeepSeekUsageApi.fetchAll(token)
                         WidgetPrefs.saveUsageStats(this@MainActivity, s)
+                        tokenErr = when {
+                            s.error != null -> s.error
+                            s.fetched && s.totalTokensMonth == 0L -> "Token 无效或已过期"
+                            else -> null
+                        }
+                    } else {
+                        tokenErr = "未填写用法Token"
                     }
+                    WidgetPrefs.saveTokenError(this@MainActivity, tokenErr)
                     b
                 }
                 WidgetPrefs.saveUsage(this@MainActivity, result)
@@ -205,42 +214,54 @@ class MainActivity : Activity() {
     ) {
         loadingBar.visibility = View.GONE
 
-        if (usage.error != null && usage.totalBalance == "0") {
+        if (usage.monthlyTokens > 0) {
+            // Token is working — show only usage info
+            balanceText.text = ""
+            balanceText.visibility = View.GONE
+            detailText.visibility = View.GONE
+            errorText.visibility = View.GONE
+            usageText.text = usage.monthlyDisplay()
+            usageText.visibility = View.VISIBLE
+            todayText.text = usage.todayDisplay()
+            todayText.visibility = View.VISIBLE
+        } else if (usage.error != null && usage.totalBalance == "0") {
             balanceText.text = "—"
+            balanceText.visibility = View.VISIBLE
             errorText.text = usage.errorDisplay()
             errorText.visibility = View.VISIBLE
             detailText.visibility = View.GONE
             usageText.visibility = View.GONE
             todayText.visibility = View.GONE
-        } else if (usage.totalBalance == "0" || usage.currency == "—") {
-            balanceText.text = "设置 API Key"
-            errorText.visibility = View.GONE
-            detailText.visibility = View.GONE
-            if (usage.monthlyTokens > 0) {
-                usageText.text = usage.monthlyDisplay()
-                usageText.visibility = View.VISIBLE
-            } else {
-                usageText.visibility = View.GONE
-            }
-            todayText.text = usage.todayDisplay()
-            todayText.visibility = if (usage.monthlyTokens > 0) View.VISIBLE else View.GONE
-        } else {
+        } else if (usage.totalBalance != "0" && usage.currency != "—") {
+            // Balance available, token not working
             balanceText.text = usage.balanceDisplay()
-            errorText.visibility = View.GONE
+            balanceText.visibility = View.VISIBLE
             if (usage.toppedUpBalance != "0" || usage.grantedBalance != "0") {
                 detailText.text = usage.detailDisplay()
                 detailText.visibility = View.VISIBLE
             } else {
                 detailText.visibility = View.GONE
             }
-            if (usage.monthlyTokens > 0) {
-                usageText.text = usage.monthlyDisplay()
-                usageText.visibility = View.VISIBLE
+            usageText.visibility = View.GONE
+            todayText.visibility = View.GONE
+            if (usage.tokenError != null) {
+                errorText.text = "⚠ ${usage.tokenError}"
+                errorText.visibility = View.VISIBLE
             } else {
-                usageText.visibility = View.GONE
+                errorText.visibility = View.GONE
             }
-            todayText.text = usage.todayDisplay()
-            todayText.visibility = if (usage.monthlyTokens > 0) View.VISIBLE else View.GONE
+        } else {
+            balanceText.text = "设置 API Key"
+            balanceText.visibility = View.VISIBLE
+            detailText.visibility = View.GONE
+            usageText.visibility = View.GONE
+            todayText.visibility = View.GONE
+            if (usage.tokenError != null) {
+                errorText.text = "⚠ ${usage.tokenError}"
+                errorText.visibility = View.VISIBLE
+            } else {
+                errorText.visibility = View.GONE
+            }
         }
         timeText.text = usage.timeDisplay()
     }
