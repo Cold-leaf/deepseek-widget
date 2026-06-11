@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.ScrollView
@@ -120,6 +121,13 @@ class MainActivity : Activity() {
 
         val balanceCard = sectionCard(0xFFFFFFFF.toInt()) {
             addView(row {
+                addView(ImageView(this@MainActivity).apply {
+                    setImageResource(R.drawable.ic_deepseek_whale)
+                    layoutParams = LinearLayout.LayoutParams(dp(20), dp(20)).apply {
+                        gravity = Gravity.CENTER_VERTICAL
+                        rightMargin = dp(6)
+                    }
+                })
                 addView(balanceTitle, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
                 addView(refreshBtn)
             })

@@ -8,7 +8,11 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.action.clickable
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.appwidget.cornerRadius
+import androidx.glance.layout.Row
+import androidx.glance.layout.size
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.provideContent
@@ -75,15 +79,24 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
             .fillMaxWidth()
             .padding(R.dimen.glance_padding_16)
     ) {
-        Text(
-            text = "🐋 DeepSeek",
-            style = TextStyle(
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = ColorProvider(R.color.widget_title)
-            ),
+        Row(
             modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
-        )
+        ) {
+            Image(
+                provider = ImageProvider(R.drawable.ic_deepseek_whale),
+                contentDescription = "DeepSeek",
+                modifier = GlanceModifier.size(R.dimen.glance_icon_20)
+            )
+            Text(
+                text = "DeepSeek",
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ColorProvider(R.color.widget_title)
+                ),
+                modifier = GlanceModifier.padding(start = R.dimen.glance_spacer_6)
+            )
+        }
 
         if (usage.monthlyTokens > 0) {
             // Token is working — show only usage info

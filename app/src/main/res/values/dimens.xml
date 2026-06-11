@@ -6,4 +6,5 @@
     <dimen name="glance_spacer_6">6dp</dimen>
     <dimen name="glance_spacer_8">8dp</dimen>
     <dimen name="glance_spacer_12">12dp</dimen>
+    <dimen name="glance_icon_20">20dp</dimen>
 </resources>
