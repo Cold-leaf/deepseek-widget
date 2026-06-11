@@ -77,7 +77,7 @@ class DeepSeekWidgetWorker(
 
         fun schedule(context: Context) {
             val request = PeriodicWorkRequestBuilder<DeepSeekWidgetWorker>(
-                30, TimeUnit.MINUTES
+                15, TimeUnit.MINUTES
             ).build()
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
