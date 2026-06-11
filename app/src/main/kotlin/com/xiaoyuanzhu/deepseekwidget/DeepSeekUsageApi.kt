@@ -1,9 +1,9 @@
 package com.xiaoyuanzhu.deepseekwidget
 
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -12,6 +12,7 @@ import okhttp3.Request
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
+@Serializable
 data class UsageStats(
     val totalTokensMonth: Long = 0,
     val totalCostMonth: Double = 0.0,
@@ -21,6 +22,7 @@ data class UsageStats(
     val error: String? = null
 )
 
+@Serializable
 data class DailyAmount(
     val date: String,
     val tokens: Long,
