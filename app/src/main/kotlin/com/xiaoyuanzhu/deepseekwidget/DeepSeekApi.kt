@@ -29,7 +29,12 @@ data class UsageSnapshot(
     val lastUpdated: Long = 0L,
     val error: String? = null,
     val monthlyTokens: Long = 0,
-    val monthlyCost: Double = 0.0
+    val monthlyCost: Double = 0.0,
+    val todayTokens: Long = 0,
+    val todayCacheHitTokens: Long = 0,
+    val todayCacheMissTokens: Long = 0,
+    val todayResponseTokens: Long = 0,
+    val todayCost: Double = 0.0
 )
 
 object DeepSeekApi {

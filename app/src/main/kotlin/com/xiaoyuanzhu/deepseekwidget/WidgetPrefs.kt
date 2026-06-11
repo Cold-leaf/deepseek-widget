@@ -29,6 +29,11 @@ object WidgetPrefs {
     private val KEY_USAGE_TOKENS = longPreferencesKey("usage_tokens_month")
     private val KEY_USAGE_COST = stringPreferencesKey("usage_cost_month")
     private val KEY_USAGE_DAYS = stringPreferencesKey("usage_days") // JSON
+    private val KEY_TODAY_TOKENS = longPreferencesKey("today_tokens")
+    private val KEY_TODAY_CACHE_HIT = longPreferencesKey("today_cache_hit")
+    private val KEY_TODAY_CACHE_MISS = longPreferencesKey("today_cache_miss")
+    private val KEY_TODAY_RESPONSE = longPreferencesKey("today_response")
+    private val KEY_TODAY_COST = stringPreferencesKey("today_cost")
 
     private val json = Json
 
@@ -80,6 +85,11 @@ object WidgetPrefs {
             if (stats.dailyAmounts.isNotEmpty()) {
                 it[KEY_USAGE_DAYS] = json.encodeToString(stats.dailyAmounts)
             }
+            it[KEY_TODAY_TOKENS] = stats.todayTokens
+            it[KEY_TODAY_CACHE_HIT] = stats.todayCacheHitTokens
+            it[KEY_TODAY_CACHE_MISS] = stats.todayCacheMissTokens
+            it[KEY_TODAY_RESPONSE] = stats.todayResponseTokens
+            it[KEY_TODAY_COST] = stats.todayCost.toString()
             if (stats.error != null) it[KEY_ERROR] = stats.error
         }
     }
@@ -96,7 +106,12 @@ object WidgetPrefs {
                 lastUpdated = prefs[KEY_LAST_UPDATED] ?: 0L,
                 error = prefs[KEY_ERROR],
                 monthlyTokens = prefs[KEY_USAGE_TOKENS] ?: 0L,
-                monthlyCost = prefs[KEY_USAGE_COST]?.toDoubleOrNull() ?: 0.0
+                monthlyCost = prefs[KEY_USAGE_COST]?.toDoubleOrNull() ?: 0.0,
+                todayTokens = prefs[KEY_TODAY_TOKENS] ?: 0L,
+                todayCacheHitTokens = prefs[KEY_TODAY_CACHE_HIT] ?: 0L,
+                todayCacheMissTokens = prefs[KEY_TODAY_CACHE_MISS] ?: 0L,
+                todayResponseTokens = prefs[KEY_TODAY_RESPONSE] ?: 0L,
+                todayCost = prefs[KEY_TODAY_COST]?.toDoubleOrNull() ?: 0.0
             )
         }
     }

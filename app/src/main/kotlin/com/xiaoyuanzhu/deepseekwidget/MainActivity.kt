@@ -117,6 +117,7 @@ class MainActivity : Activity() {
         val balanceText = textView("", 32, true, 0xFFA5B4FC.toInt())
         val detailText = textView("", 14, false, 0xFF818CF8.toInt())
         val usageText = textView("", 14, false, 0xFFA78BFA.toInt())
+        val todayText = textView("", 13, false, 0xFFC4B5FD.toInt())
         val errorText = textView("", 14, false, 0xFFFF6B6B.toInt())
         val timeText = textView("", 12, false, 0xFF6366F1.toInt())
 
@@ -130,6 +131,7 @@ class MainActivity : Activity() {
             addView(balanceText)
             addView(detailText)
             addView(usageText)
+            addView(todayText)
             addView(errorText)
             addView(space(8))
             addView(timeText)
@@ -162,7 +164,7 @@ class MainActivity : Activity() {
             val savedToken = WidgetPrefs.getUsageToken(this@MainActivity)
             tokenInput?.setText(savedToken ?: "")
             WidgetPrefs.usageFlow(this@MainActivity).collect {
-                updateBalanceUI(balanceText, detailText, usageText, errorText, timeText, loadingBar, it)
+                updateBalanceUI(balanceText, detailText, usageText, todayText, errorText, timeText, loadingBar, it)
             }
         }
 
@@ -198,6 +200,7 @@ class MainActivity : Activity() {
         balanceText: TextView,
         detailText: TextView,
         usageText: TextView,
+        todayText: TextView,
         errorText: TextView,
         timeText: TextView,
         loadingBar: ProgressBar,
@@ -211,6 +214,7 @@ class MainActivity : Activity() {
             errorText.visibility = View.VISIBLE
             detailText.visibility = View.GONE
             usageText.visibility = View.GONE
+            todayText.visibility = View.GONE
         } else if (usage.totalBalance == "0" || usage.currency == "—") {
             balanceText.text = "设置 API Key"
             errorText.visibility = View.GONE
@@ -222,6 +226,8 @@ class MainActivity : Activity() {
             } else {
                 usageText.visibility = View.GONE
             }
+            todayText.text = formatTodayBreakdown(usage)
+            todayText.visibility = if (usage.todayTokens > 0) View.VISIBLE else View.GONE
         } else {
             balanceText.text = "${usage.totalBalance} ${usage.currency}"
             errorText.visibility = View.GONE
@@ -239,6 +245,8 @@ class MainActivity : Activity() {
             } else {
                 usageText.visibility = View.GONE
             }
+            todayText.text = formatTodayBreakdown(usage)
+            todayText.visibility = if (usage.todayTokens > 0) View.VISIBLE else View.GONE
         }
         timeText.text = if (usage.lastUpdated > 0) {
             "最后更新: ${SimpleDateFormat("MM-dd HH:mm:ss", Locale.getDefault()).format(Date(usage.lastUpdated))}"
@@ -253,6 +261,15 @@ class MainActivity : Activity() {
             count >= 1_000 -> "${"%.1f".format(count / 1_000.0)}K"
             else -> count.toString()
         }
+    }
+
+    private fun formatTodayBreakdown(u: UsageSnapshot): String {
+        val parts = mutableListOf<String>()
+        if (u.todayCacheHitTokens > 0) parts.add("命中 ${formatTokens(u.todayCacheHitTokens)}")
+        if (u.todayCacheMissTokens > 0) parts.add("未命中 ${formatTokens(u.todayCacheMissTokens)}")
+        if (u.todayResponseTokens > 0) parts.add("输出 ${formatTokens(u.todayResponseTokens)}")
+        val costStr = if (u.todayCost > 0) "  ¥${"%.2f".format(u.todayCost)}" else ""
+        return "今日 ${parts.joinToString("  ")}${costStr}"
     }
 
     private fun space(h: Int) = View(this).apply {

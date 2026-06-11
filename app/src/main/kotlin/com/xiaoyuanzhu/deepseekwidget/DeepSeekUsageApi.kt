@@ -19,7 +19,12 @@ data class UsageStats(
     val topModel: String = "",
     val dailyAmounts: List<DailyAmount> = emptyList(),
     val fetched: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val todayTokens: Long = 0,
+    val todayCacheHitTokens: Long = 0,
+    val todayCacheMissTokens: Long = 0,
+    val todayResponseTokens: Long = 0,
+    val todayCost: Double = 0.0
 )
 
 @Serializable
@@ -84,12 +89,29 @@ object DeepSeekUsageApi {
                 DailyAmount(date, obj.sumUsageTokens("data"), costDaysMap[date] ?: 0.0)
             }.sortedBy { it.date }
 
+            // Today's breakdown
+            val todayStr = String.format("%d-%02d-%02d", year, month, now.get(Calendar.DAY_OF_MONTH))
+            val todayEntry = amountDays.firstOrNull {
+                it.jsonObject["date"]?.jsonPrimitive?.content == todayStr
+            }
+            val todayCacheHit = todayEntry?.sumTypeTokens("data", "PROMPT_CACHE_HIT_TOKEN") ?: 0L
+            val todayCacheMiss = todayEntry?.sumTypeTokens("data", "PROMPT_CACHE_MISS_TOKEN") ?: 0L
+            val todayPrompt = todayEntry?.sumTypeTokens("data", "PROMPT_TOKEN") ?: 0L
+            val todayResponse = todayEntry?.sumTypeTokens("data", "RESPONSE_TOKEN") ?: 0L
+            val todayTotalTokens = todayCacheHit + todayCacheMiss + todayPrompt + todayResponse
+            val todayCostVal = costDaysMap[todayStr] ?: 0.0
+
             UsageStats(
                 totalTokensMonth = totalTokens,
                 totalCostMonth = totalCost,
                 topModel = topModel,
                 dailyAmounts = dailyList,
-                fetched = true
+                fetched = true,
+                todayTokens = todayTotalTokens,
+                todayCacheHitTokens = todayCacheHit,
+                todayCacheMissTokens = todayCacheMiss,
+                todayResponseTokens = todayResponse,
+                todayCost = todayCostVal
             )
         } catch (e: Exception) {
             UsageStats(fetched = true, error = e.message ?: "Unknown error")
@@ -114,6 +136,18 @@ object DeepSeekUsageApi {
     private fun sumModelTokens(modelEntry: JsonElement): Long {
         return modelEntry.jsonObject["usage"]?.jsonArray?.sumOf { usageEntry ->
             usageEntry.jsonObject["amount"]?.jsonPrimitive?.content?.toLongOrNull() ?: 0L
+        } ?: 0L
+    }
+
+    // Sum token amounts for a specific usage type (e.g. "PROMPT_CACHE_HIT_TOKEN") from an array field
+    private fun kotlinx.serialization.json.JsonObject.sumTypeTokens(field: String, type: String): Long {
+        return get(field)?.jsonArray?.sumOf { modelEntry ->
+            modelEntry.jsonObject["usage"]?.jsonArray?.sumOf { usageEntry ->
+                val obj = usageEntry.jsonObject
+                if (obj["type"]?.jsonPrimitive?.content == type) {
+                    obj["amount"]?.jsonPrimitive?.content?.toLongOrNull() ?: 0L
+                } else 0L
+            } ?: 0L
         } ?: 0L
     }
 

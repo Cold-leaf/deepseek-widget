@@ -130,6 +130,23 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
                 )
             }
 
+        if (usage.todayTokens > 0) {
+                val parts = mutableListOf<String>()
+                if (usage.todayCacheHitTokens > 0) parts.add("命中 ${formatTokens(usage.todayCacheHitTokens)}")
+                if (usage.todayCacheMissTokens > 0) parts.add("未命中 ${formatTokens(usage.todayCacheMissTokens)}")
+                if (usage.todayResponseTokens > 0) parts.add("输出 ${formatTokens(usage.todayResponseTokens)}")
+                val costStr = if (usage.todayCost > 0) "  ¥${"%.2f".format(usage.todayCost)}" else ""
+                Text(
+                    text = "今日 ${parts.joinToString("  ")}${costStr}",
+                    style = TextStyle(
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = ColorProvider(R.color.widget_detail)
+                    ),
+                    modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
+                )
+            }
+
         Text(
             text = if (usage.lastUpdated > 0) "更新于 ${formatTime(usage.lastUpdated)}" else "等待首次加载...",
             style = TextStyle(
