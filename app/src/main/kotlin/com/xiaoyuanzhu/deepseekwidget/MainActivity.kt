@@ -114,7 +114,7 @@ class MainActivity : Activity() {
         val balanceText = textView("", 28, true, 0xFFA5B4FC.toInt())
         val detailText = textView("", 13, false, 0xFF818CF8.toInt())
         val usageText = textView("", 13, false, 0xFFA78BFA.toInt())
-        val todayText = textView("", 12, false, 0xFFC4B5FD.toInt())
+        val todayText = textView("", 11, false, 0xFFC4B5FD.toInt())
         val errorText = textView("", 13, false, 0xFFFF6B6B.toInt())
         val timeText = textView("", 11, false, 0xFF6366F1.toInt())
 

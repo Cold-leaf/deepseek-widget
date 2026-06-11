@@ -101,7 +101,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
                 Text(
                     text = todayStr,
                     style = TextStyle(
-                        fontSize = 12.sp,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Normal,
                         color = ColorProvider(R.color.widget_detail)
                     ),
