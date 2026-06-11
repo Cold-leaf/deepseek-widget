@@ -7,7 +7,7 @@ Android 桌面小部件，显示 DeepSeek API 余额和用量统计。
 - 桌面小部件实时显示 DeepSeek 余额
 - 通过用法 Token 获取本月和今日用量（按模型拆分，缓存命中/未命中/输出）
 - 每 15 分钟自动刷新
-- 支持仅 API Key、仅用法 Token、或两者同时使用
+- 可单独使用 API Key 或用法 Token，也可同时填入
 
 ## 使用
 
