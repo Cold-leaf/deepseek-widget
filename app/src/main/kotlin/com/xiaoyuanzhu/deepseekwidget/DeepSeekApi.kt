@@ -5,6 +5,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 @Serializable
@@ -36,6 +39,39 @@ data class UsageSnapshot(
     val todayResponseTokens: Long = 0,
     val todayCost: Double = 0.0
 )
+
+// Shared formatting — both widget and app preview use these
+
+fun formatTokens(count: Long): String = when {
+    count >= 1_000_000 -> "${"%.1f".format(count / 1_000_000.0)}M"
+    count >= 1_000 -> "${"%.1f".format(count / 1_000.0)}K"
+    else -> count.toString()
+}
+
+fun UsageSnapshot.balanceDisplay(): String = "余额 $totalBalance $currency"
+
+fun UsageSnapshot.detailDisplay(): String = "充值 $toppedUpBalance  赠送 $grantedBalance"
+
+fun UsageSnapshot.monthlyDisplay(): String {
+    val costStr = if (monthlyCost > 0) "  ¥${"%.2f".format(monthlyCost)}" else ""
+    return "本月 ${formatTokens(monthlyTokens)} tokens$costStr"
+}
+
+fun UsageSnapshot.todayDisplay(): String {
+    val parts = mutableListOf<String>()
+    if (todayCacheHitTokens > 0) parts.add("命中 ${formatTokens(todayCacheHitTokens)}")
+    if (todayCacheMissTokens > 0) parts.add("未命中 ${formatTokens(todayCacheMissTokens)}")
+    if (todayResponseTokens > 0) parts.add("输出 ${formatTokens(todayResponseTokens)}")
+    val costStr = if (todayCost > 0) "  ¥${"%.2f".format(todayCost)}" else ""
+    val detail = parts.joinToString("  ")
+    return if (detail.isNotEmpty() || costStr.isNotEmpty()) "今日 $detail$costStr" else "今日 0 tokens"
+}
+
+fun UsageSnapshot.timeDisplay(): String =
+    if (lastUpdated > 0) "更新于 ${SimpleDateFormat("MM-dd HH:mm", Locale.getDefault()).format(Date(lastUpdated))}"
+    else "等待首次加载..."
+
+fun UsageSnapshot.errorDisplay(): String = "⚠ $error"
 
 object DeepSeekApi {
     private const val BASE_URL = "https://api.deepseek.com"

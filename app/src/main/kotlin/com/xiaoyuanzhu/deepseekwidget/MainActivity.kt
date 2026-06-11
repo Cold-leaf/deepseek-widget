@@ -17,9 +17,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class MainActivity : Activity() {
 
@@ -210,7 +207,7 @@ class MainActivity : Activity() {
 
         if (usage.error != null && usage.totalBalance == "0") {
             balanceText.text = "—"
-            errorText.text = "⚠ ${usage.error}"
+            errorText.text = usage.errorDisplay()
             errorText.visibility = View.VISIBLE
             detailText.visibility = View.GONE
             usageText.visibility = View.GONE
@@ -220,57 +217,32 @@ class MainActivity : Activity() {
             errorText.visibility = View.GONE
             detailText.visibility = View.GONE
             if (usage.monthlyTokens > 0) {
-                val costStr = if (usage.monthlyCost > 0) "  ¥${"%.2f".format(usage.monthlyCost)}" else ""
-                usageText.text = "本月 ${formatTokens(usage.monthlyTokens)} tokens$costStr"
+                usageText.text = usage.monthlyDisplay()
                 usageText.visibility = View.VISIBLE
             } else {
                 usageText.visibility = View.GONE
             }
-            todayText.text = formatTodayBreakdown(usage)
+            todayText.text = usage.todayDisplay()
             todayText.visibility = if (usage.monthlyTokens > 0) View.VISIBLE else View.GONE
         } else {
-            balanceText.text = "余额 ${usage.totalBalance} ${usage.currency}"
+            balanceText.text = usage.balanceDisplay()
             errorText.visibility = View.GONE
             if (usage.toppedUpBalance != "0" || usage.grantedBalance != "0") {
-                detailText.text = "充值 ${usage.toppedUpBalance}  赠送 ${usage.grantedBalance}"
+                detailText.text = usage.detailDisplay()
                 detailText.visibility = View.VISIBLE
             } else {
                 detailText.visibility = View.GONE
             }
-            // Usage stats
             if (usage.monthlyTokens > 0) {
-                val costStr = if (usage.monthlyCost > 0) "  ¥${"%.2f".format(usage.monthlyCost)}" else ""
-                usageText.text = "本月 ${formatTokens(usage.monthlyTokens)} tokens$costStr"
+                usageText.text = usage.monthlyDisplay()
                 usageText.visibility = View.VISIBLE
             } else {
                 usageText.visibility = View.GONE
             }
-            todayText.text = formatTodayBreakdown(usage)
+            todayText.text = usage.todayDisplay()
             todayText.visibility = if (usage.monthlyTokens > 0) View.VISIBLE else View.GONE
         }
-        timeText.text = if (usage.lastUpdated > 0) {
-            "更新于 ${SimpleDateFormat("MM-dd HH:mm", Locale.getDefault()).format(Date(usage.lastUpdated))}"
-        } else {
-            "等待首次加载..."
-        }
-    }
-
-    private fun formatTokens(count: Long): String {
-        return when {
-            count >= 1_000_000 -> "${"%.1f".format(count / 1_000_000.0)}M"
-            count >= 1_000 -> "${"%.1f".format(count / 1_000.0)}K"
-            else -> count.toString()
-        }
-    }
-
-    private fun formatTodayBreakdown(u: UsageSnapshot): String {
-        val parts = mutableListOf<String>()
-        if (u.todayCacheHitTokens > 0) parts.add("命中 ${formatTokens(u.todayCacheHitTokens)}")
-        if (u.todayCacheMissTokens > 0) parts.add("未命中 ${formatTokens(u.todayCacheMissTokens)}")
-        if (u.todayResponseTokens > 0) parts.add("输出 ${formatTokens(u.todayResponseTokens)}")
-        val costStr = if (u.todayCost > 0) "  ¥${"%.2f".format(u.todayCost)}" else ""
-        val detail = parts.joinToString("  ")
-        return if (detail.isNotEmpty() || costStr.isNotEmpty()) "今日 $detail$costStr" else "今日 0 tokens"
+        timeText.text = usage.timeDisplay()
     }
 
     private fun space(h: Int) = View(this).apply {

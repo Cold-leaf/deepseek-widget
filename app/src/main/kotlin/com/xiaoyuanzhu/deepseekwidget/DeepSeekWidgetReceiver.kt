@@ -22,9 +22,6 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import kotlinx.coroutines.flow.first
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class DeepSeekWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = DeepSeekWidget()
@@ -88,7 +85,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
 
         if (usage.error != null && usage.totalBalance == "0") {
             Text(
-                text = "⚠ ${usage.error}",
+                text = usage.errorDisplay(),
                 style = TextStyle(
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Normal,
@@ -97,7 +94,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
             )
         } else if (usage.totalBalance != "0") {
             Text(
-                text = "余额 ${usage.totalBalance} ${usage.currency}",
+                text = usage.balanceDisplay(),
                 style = TextStyle(
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
@@ -107,7 +104,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
             )
             if (usage.toppedUpBalance != "0" || usage.grantedBalance != "0") {
                 Text(
-                    text = "充值 ${usage.toppedUpBalance}  赠送 ${usage.grantedBalance}",
+                    text = usage.detailDisplay(),
                     style = TextStyle(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Normal,
@@ -119,37 +116,31 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
         }
 
         if (usage.monthlyTokens > 0) {
-                Text(
-                    text = "本月 ${formatTokens(usage.monthlyTokens)} tokens  ¥${"%.2f".format(usage.monthlyCost)}",
-                    style = TextStyle(
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = ColorProvider(R.color.widget_usage)
-                    ),
-                    modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
-                )
-            }
+            Text(
+                text = usage.monthlyDisplay(),
+                style = TextStyle(
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = ColorProvider(R.color.widget_usage)
+                ),
+                modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
+            )
+        }
 
         if (usage.monthlyTokens > 0) {
-                val parts = mutableListOf<String>()
-                if (usage.todayCacheHitTokens > 0) parts.add("命中 ${formatTokens(usage.todayCacheHitTokens)}")
-                if (usage.todayCacheMissTokens > 0) parts.add("未命中 ${formatTokens(usage.todayCacheMissTokens)}")
-                if (usage.todayResponseTokens > 0) parts.add("输出 ${formatTokens(usage.todayResponseTokens)}")
-                val costStr = if (usage.todayCost > 0) "  ¥${"%.2f".format(usage.todayCost)}" else ""
-                val detail = parts.joinToString("  ")
-                Text(
-                    text = if (detail.isNotEmpty() || costStr.isNotEmpty()) "今日 $detail$costStr" else "今日 0 tokens",
-                    style = TextStyle(
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = ColorProvider(R.color.widget_detail)
-                    ),
-                    modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
-                )
-            }
+            Text(
+                text = usage.todayDisplay(),
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = ColorProvider(R.color.widget_detail)
+                ),
+                modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
+            )
+        }
 
         Text(
-            text = if (usage.lastUpdated > 0) "更新于 ${formatTime(usage.lastUpdated)}" else "等待首次加载...",
+            text = usage.timeDisplay(),
             style = TextStyle(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Normal,
@@ -157,17 +148,4 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
             )
         )
     }
-}
-
-private fun formatTokens(count: Long): String {
-    return when {
-        count >= 1_000_000 -> "${"%.1f".format(count / 1_000_000.0)}M"
-        count >= 1_000 -> "${"%.1f".format(count / 1_000.0)}K"
-        else -> count.toString()
-    }
-}
-
-private fun formatTime(epoch: Long): String {
-    val sdf = SimpleDateFormat("MM-dd HH:mm", Locale.getDefault())
-    return sdf.format(Date(epoch))
 }
