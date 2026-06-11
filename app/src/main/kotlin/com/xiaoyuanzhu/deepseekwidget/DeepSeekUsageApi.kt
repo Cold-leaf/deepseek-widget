@@ -94,10 +94,10 @@ object DeepSeekUsageApi {
             val todayEntry = amountDays.firstOrNull {
                 it.jsonObject["date"]?.jsonPrimitive?.content == todayStr
             }
-            val todayCacheHit = todayEntry?.sumTypeTokens("data", "PROMPT_CACHE_HIT_TOKEN") ?: 0L
-            val todayCacheMiss = todayEntry?.sumTypeTokens("data", "PROMPT_CACHE_MISS_TOKEN") ?: 0L
-            val todayPrompt = todayEntry?.sumTypeTokens("data", "PROMPT_TOKEN") ?: 0L
-            val todayResponse = todayEntry?.sumTypeTokens("data", "RESPONSE_TOKEN") ?: 0L
+            val todayCacheHit = todayEntry?.jsonObject?.sumTypeTokens("data", "PROMPT_CACHE_HIT_TOKEN") ?: 0L
+            val todayCacheMiss = todayEntry?.jsonObject?.sumTypeTokens("data", "PROMPT_CACHE_MISS_TOKEN") ?: 0L
+            val todayPrompt = todayEntry?.jsonObject?.sumTypeTokens("data", "PROMPT_TOKEN") ?: 0L
+            val todayResponse = todayEntry?.jsonObject?.sumTypeTokens("data", "RESPONSE_TOKEN") ?: 0L
             val todayTotalTokens = todayCacheHit + todayCacheMiss + todayPrompt + todayResponse
             val todayCostVal = costDaysMap[todayStr] ?: 0.0
 
