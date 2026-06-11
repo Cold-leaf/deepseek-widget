@@ -2,10 +2,10 @@
 <resources>
     <color name="icon_background">#FFFFFF</color>
     <color name="widget_bg">#FFFFFF</color>
-    <color name="widget_title">#1E1B4B</color>
-    <color name="widget_text">#1E1B4B</color>
-    <color name="widget_detail">#64748B</color>
+    <color name="widget_title">#4F46E5</color>
+    <color name="widget_text">#3730A3</color>
+    <color name="widget_detail">#6366F1</color>
     <color name="widget_usage">#4D6BFE</color>
-    <color name="widget_time">#94A3B8</color>
+    <color name="widget_time">#818CF8</color>
     <color name="widget_error">#EF4444</color>
 </resources>
