@@ -30,7 +30,7 @@ class MainActivity : Activity() {
 
         // Declare inputs here so they're accessible from scope.launch below
         var keyInput: EditText? = null
-        var cookieInput: EditText? = null
+        var tokenInput: EditText? = null
 
         val scrollView = ScrollView(this)
         val root = LinearLayout(this).apply {
@@ -71,36 +71,34 @@ class MainActivity : Activity() {
 
         root.addView(space(16))
 
-        // Dashboard Cookie section (optional, for usage stats)
+        // Usage Token section (for monthly stats)
         root.addView(sectionCard {
             addView(row {
-                addView(textView("Dashboard Cookie（可选）", 16, true, 0xFF7C3AED.toInt()))
+                addView(textView("用法用量 Token（可选）", 16, true, 0xFF7C3AED.toInt()))
             })
             addView(space(8))
             addView(textView(
-                "浏览器打开 platform.deepseek.com → 登录 → F12 → Application → Cookies → 复制整行，\n" +
-                "格式: session_id=xxx; ... 或者直接粘贴完整Cookie字符串。\n" +
-                "获取后可看到本月token用量和消费金额。Cookie会过期，需定期刷新。",
+                "浏览器打开 platform.deepseek.com/usage → F12 → Network → 找 /api/v0/usage 请求 →\n" +
+                "复制 Request Headers 里的 Authorization: Bearer 后面那串 token。\n" +
+                "获取后可看到本月token用量和消费金额。",
                 12, false, 0xFF64748B.toInt()
             ))
             addView(space(8))
 
-            cookieInput = EditText(this@MainActivity).apply {
-                hint = "session_id=xxx; token=xxx; ..."
-                inputType = InputType.TYPE_CLASS_TEXT
+            tokenInput = EditText(this@MainActivity).apply {
+                hint = "填入 Bearer token"
+                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
                 setPadding(dp(12), dp(10), dp(12), dp(10))
                 setBackgroundColor(0xFFF1F5F9.toInt())
-                setMinLines(2)
-                setMaxLines(4)
             }
-            addView(cookieInput)
+            addView(tokenInput)
 
             addView(space(8))
             addView(primaryButton("保存", 0xFF7C3AED.toInt()) {
-                val cookie = cookieInput?.text?.toString()?.trim() ?: ""
+                val token = tokenInput?.text?.toString()?.trim() ?: ""
                 scope.launch {
-                    WidgetPrefs.saveDashboardCookie(this@MainActivity, cookie)
-                    Toast.makeText(this@MainActivity, "Cookie已保存", Toast.LENGTH_SHORT).show()
+                    WidgetPrefs.saveUsageToken(this@MainActivity, token)
+                    Toast.makeText(this@MainActivity, "Token已保存", Toast.LENGTH_SHORT).show()
                 }
             })
         })
@@ -161,8 +159,8 @@ class MainActivity : Activity() {
         scope.launch {
             val savedKey = WidgetPrefs.getApiKey(this@MainActivity)
             keyInput?.setText(savedKey ?: "")
-            val savedCookie = WidgetPrefs.getDashboardCookie(this@MainActivity)
-            cookieInput?.setText(savedCookie ?: "")
+            val savedToken = WidgetPrefs.getUsageToken(this@MainActivity)
+            tokenInput?.setText(savedToken ?: "")
             WidgetPrefs.usageFlow(this@MainActivity).collect {
                 updateBalanceUI(balanceText, detailText, usageText, errorText, timeText, loadingBar, it)
             }
@@ -172,9 +170,9 @@ class MainActivity : Activity() {
         refreshBtn.setOnClickListener {
             scope.launch {
                 val api = WidgetPrefs.getApiKey(this@MainActivity)
-                val cookie = WidgetPrefs.getDashboardCookie(this@MainActivity)
-                if (api.isNullOrBlank() && cookie.isNullOrBlank()) {
-                    Toast.makeText(this@MainActivity, "请先设置API Key或Cookie", Toast.LENGTH_SHORT).show()
+                val token = WidgetPrefs.getUsageToken(this@MainActivity)
+                if (api.isNullOrBlank() && token.isNullOrBlank()) {
+                    Toast.makeText(this@MainActivity, "请先设置API Key或用法Token", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
                 loadingBar.visibility = View.VISIBLE
@@ -183,8 +181,8 @@ class MainActivity : Activity() {
                     val b = if (!api.isNullOrBlank()) {
                         DeepSeekApi.fetchBalance(api)
                     } else UsageSnapshot(lastUpdated = System.currentTimeMillis())
-                    if (!cookie.isNullOrBlank()) {
-                        val s = DeepSeekUsageApi.fetchAll(cookie)
+                    if (!token.isNullOrBlank()) {
+                        val s = DeepSeekUsageApi.fetchAll(token)
                         WidgetPrefs.saveUsageStats(this@MainActivity, s)
                     }
                     b

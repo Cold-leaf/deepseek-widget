@@ -17,7 +17,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 object WidgetPrefs {
     private val KEY_API_KEY = stringPreferencesKey("api_key")
-    private val KEY_DASHBOARD_COOKIE = stringPreferencesKey("dashboard_cookie")
+    private val KEY_USAGE_TOKEN = stringPreferencesKey("usage_token")
 
     private val KEY_TOTAL_BALANCE = stringPreferencesKey("total_balance")
     private val KEY_GRANTED_BALANCE = stringPreferencesKey("granted_balance")
@@ -42,14 +42,14 @@ object WidgetPrefs {
         return context.dataStore.data.first()[KEY_API_KEY]
     }
 
-    // ---- Dashboard cookie ----
+    // ---- Usage token (Bearer) ----
 
-    suspend fun saveDashboardCookie(context: Context, cookie: String) {
-        context.dataStore.edit { it[KEY_DASHBOARD_COOKIE] = cookie }
+    suspend fun saveUsageToken(context: Context, token: String) {
+        context.dataStore.edit { it[KEY_USAGE_TOKEN] = token }
     }
 
-    suspend fun getDashboardCookie(context: Context): String? {
-        return context.dataStore.data.first()[KEY_DASHBOARD_COOKIE]
+    suspend fun getUsageToken(context: Context): String? {
+        return context.dataStore.data.first()[KEY_USAGE_TOKEN]
     }
 
     // ---- Balance (from API key) ----

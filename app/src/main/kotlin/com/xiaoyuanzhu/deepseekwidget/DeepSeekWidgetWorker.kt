@@ -21,12 +21,12 @@ class DeepSeekWidgetWorker(
         WidgetPrefs.clearError(applicationContext)
 
         val apiKey = WidgetPrefs.getApiKey(applicationContext)
-        val dashboardCookie = WidgetPrefs.getDashboardCookie(applicationContext)
+        val usageToken = WidgetPrefs.getUsageToken(applicationContext)
 
-        if (apiKey.isNullOrBlank() && dashboardCookie.isNullOrBlank()) {
+        if (apiKey.isNullOrBlank() && usageToken.isNullOrBlank()) {
             WidgetPrefs.saveUsage(
                 applicationContext,
-                UsageSnapshot(error = "未设置API Key或Cookie", lastUpdated = System.currentTimeMillis())
+                UsageSnapshot(error = "未设置API Key或用法Token", lastUpdated = System.currentTimeMillis())
             )
             return Result.failure()
         }
@@ -38,8 +38,8 @@ class DeepSeekWidgetWorker(
             val balanceJob = if (!apiKey.isNullOrBlank()) {
                 async { DeepSeekApi.fetchBalance(apiKey) }
             } else null
-            val usageJob = if (!dashboardCookie.isNullOrBlank()) {
-                async { DeepSeekUsageApi.fetchAll(dashboardCookie) }
+            val usageJob = if (!usageToken.isNullOrBlank()) {
+                async { DeepSeekUsageApi.fetchAll(usageToken) }
             } else null
 
             balanceResult = balanceJob?.await()

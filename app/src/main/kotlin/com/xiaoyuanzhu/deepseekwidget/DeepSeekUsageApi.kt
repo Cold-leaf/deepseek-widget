@@ -42,15 +42,15 @@ object DeepSeekUsageApi {
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
-    fun fetchAll(dashboardCookie: String): UsageStats {
+    fun fetchAll(usageToken: String): UsageStats {
         val now = Calendar.getInstance()
         val month = now.get(Calendar.MONTH) + 1
         val year = now.get(Calendar.YEAR)
 
         try {
-            val summary = fetchUserSummary(dashboardCookie)
-            val amounts = fetchUsageAmount(dashboardCookie, month, year)
-            val costs = fetchUsageCost(dashboardCookie, month, year)
+            val summary = fetchUserSummary(usageToken)
+            val amounts = fetchUsageAmount(usageToken, month, year)
+            val costs = fetchUsageCost(usageToken, month, year)
 
             if (summary.first.isEmpty() && amounts.isEmpty() && costs.isEmpty()) {
                 return UsageStats(
@@ -80,8 +80,8 @@ object DeepSeekUsageApi {
     }
 
     // Returns Pair<topModelName, rawJsonString>
-    private fun fetchUserSummary(cookie: String): Pair<String, String> {
-        val body = get("$BASE/api/v0/users/get_user_summary", cookie)
+    private fun fetchUserSummary(token: String): Pair<String, String> {
+        val body = get("$BASE/api/v0/users/get_user_summary", token)
             ?: return "" to ""
         val root = json.parseToJsonElement(body).jsonObject
         val data = root["data"]?.jsonObject ?: return "" to ""
@@ -93,8 +93,8 @@ object DeepSeekUsageApi {
     }
 
     // Returns list of Pair<dateString, tokenCount>
-    private fun fetchUsageAmount(cookie: String, month: Int, year: Int): List<Pair<String, Long>> {
-        val body = get("$BASE/api/v0/usage/amount?month=$month&year=$year", cookie)
+    private fun fetchUsageAmount(token: String, month: Int, year: Int): List<Pair<String, Long>> {
+        val body = get("$BASE/api/v0/usage/amount?month=$month&year=$year", token)
             ?: return emptyList()
         return parseDataList(body) { entry ->
             val date = entry.jsonObject["date"]?.jsonPrimitive?.content
@@ -110,8 +110,8 @@ object DeepSeekUsageApi {
     }
 
     // Returns list of Pair<dateString, costDouble>
-    private fun fetchUsageCost(cookie: String, month: Int, year: Int): List<Pair<String, Double>> {
-        val body = get("$BASE/api/v0/usage/cost?month=$month&year=$year", cookie)
+    private fun fetchUsageCost(token: String, month: Int, year: Int): List<Pair<String, Double>> {
+        val body = get("$BASE/api/v0/usage/cost?month=$month&year=$year", token)
             ?: return emptyList()
         return parseDataList(body) { entry ->
             val date = entry.jsonObject["date"]?.jsonPrimitive?.content
@@ -148,10 +148,10 @@ object DeepSeekUsageApi {
         }
     }
 
-    private fun get(url: String, cookie: String): String? {
+    private fun get(url: String, token: String): String? {
         val request = Request.Builder()
             .url(url)
-            .header("Cookie", cookie)
+            .header("Authorization", "Bearer $token")
             .header("User-Agent", "Mozilla/5.0")
             .build()
         val response = client.newCall(request).execute()
