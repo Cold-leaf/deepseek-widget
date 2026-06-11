@@ -42,7 +42,7 @@ object DeepSeekUsageApi {
         val month = now.get(Calendar.MONTH) + 1
         val year = now.get(Calendar.YEAR)
 
-        try {
+        return try {
             val amountBody = get("$BASE/api/v0/usage/amount?month=$month&year=$year", usageToken)
             val costBody = get("$BASE/api/v0/usage/cost?month=$month&year=$year", usageToken)
 
