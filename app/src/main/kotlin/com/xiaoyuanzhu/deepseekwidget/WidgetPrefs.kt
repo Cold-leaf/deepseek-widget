@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "deepseek_widget")
@@ -34,6 +35,7 @@ object WidgetPrefs {
     private val KEY_TODAY_CACHE_MISS = longPreferencesKey("today_cache_miss")
     private val KEY_TODAY_RESPONSE = longPreferencesKey("today_response")
     private val KEY_TODAY_COST = stringPreferencesKey("today_cost")
+    private val KEY_TODAY_MODELS = stringPreferencesKey("today_models") // JSON
 
     private val json = Json
 
@@ -90,6 +92,9 @@ object WidgetPrefs {
             it[KEY_TODAY_CACHE_MISS] = stats.todayCacheMissTokens
             it[KEY_TODAY_RESPONSE] = stats.todayResponseTokens
             it[KEY_TODAY_COST] = stats.todayCost.toString()
+            if (stats.todayModels.isNotEmpty()) {
+                it[KEY_TODAY_MODELS] = json.encodeToString(stats.todayModels)
+            }
             if (stats.error != null) it[KEY_ERROR] = stats.error
         }
     }
@@ -111,7 +116,11 @@ object WidgetPrefs {
                 todayCacheHitTokens = prefs[KEY_TODAY_CACHE_HIT] ?: 0L,
                 todayCacheMissTokens = prefs[KEY_TODAY_CACHE_MISS] ?: 0L,
                 todayResponseTokens = prefs[KEY_TODAY_RESPONSE] ?: 0L,
-                todayCost = prefs[KEY_TODAY_COST]?.toDoubleOrNull() ?: 0.0
+                todayCost = prefs[KEY_TODAY_COST]?.toDoubleOrNull() ?: 0.0,
+                todayModels = prefs[KEY_TODAY_MODELS]?.let { str ->
+                    try { json.decodeFromString<List<TodayModelBreakdown>>(str) }
+                    catch (_: Exception) { emptyList() }
+                } ?: emptyList()
             )
         }
     }

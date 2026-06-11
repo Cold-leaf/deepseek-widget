@@ -24,7 +24,8 @@ data class UsageStats(
     val todayCacheHitTokens: Long = 0,
     val todayCacheMissTokens: Long = 0,
     val todayResponseTokens: Long = 0,
-    val todayCost: Double = 0.0
+    val todayCost: Double = 0.0,
+    val todayModels: List<TodayModelBreakdown> = emptyList()
 )
 
 @Serializable
@@ -33,6 +34,18 @@ data class DailyAmount(
     val tokens: Long,
     val cost: Double
 )
+
+@Serializable
+data class TodayModelBreakdown(
+    val model: String,
+    val cacheHitTokens: Long = 0,
+    val cacheMissTokens: Long = 0,
+    val promptTokens: Long = 0,
+    val responseTokens: Long = 0,
+    val cost: Double = 0.0
+) {
+    val totalTokens: Long get() = cacheHitTokens + cacheMissTokens + promptTokens + responseTokens
+}
 
 object DeepSeekUsageApi {
     private const val BASE = "https://platform.deepseek.com"
@@ -101,6 +114,28 @@ object DeepSeekUsageApi {
             val todayTotalTokens = todayCacheHit + todayCacheMiss + todayPrompt + todayResponse
             val todayCostVal = costDaysMap[todayStr] ?: 0.0
 
+            // Per-model today breakdown
+            val todayCostByModel = costBiz?.get("days")?.jsonArray
+                ?.firstOrNull { it.jsonObject["date"]?.jsonPrimitive?.content == todayStr }
+                ?.jsonObject?.get("data")?.jsonArray
+                ?.associate { modelEntry ->
+                    val m = modelEntry.jsonObject["model"]?.jsonPrimitive?.content ?: ""
+                    m to sumModelCostTokens(modelEntry)
+                } ?: emptyMap()
+
+            val todayModelsList = todayEntry?.jsonObject?.get("data")?.jsonArray?.mapNotNull { modelEntry ->
+                val obj = modelEntry.jsonObject
+                val model = obj["model"]?.jsonPrimitive?.content ?: return@mapNotNull null
+                TodayModelBreakdown(
+                    model = model,
+                    cacheHitTokens = obj.sumTypeInModel("PROMPT_CACHE_HIT_TOKEN"),
+                    cacheMissTokens = obj.sumTypeInModel("PROMPT_CACHE_MISS_TOKEN"),
+                    promptTokens = obj.sumTypeInModel("PROMPT_TOKEN"),
+                    responseTokens = obj.sumTypeInModel("RESPONSE_TOKEN"),
+                    cost = todayCostByModel[model] ?: 0.0
+                )
+            }?.sortedByDescending { it.totalTokens } ?: emptyList()
+
             UsageStats(
                 totalTokensMonth = totalTokens,
                 totalCostMonth = totalCost,
@@ -111,7 +146,8 @@ object DeepSeekUsageApi {
                 todayCacheHitTokens = todayCacheHit,
                 todayCacheMissTokens = todayCacheMiss,
                 todayResponseTokens = todayResponse,
-                todayCost = todayCostVal
+                todayCost = todayCostVal,
+                todayModels = todayModelsList
             )
         } catch (e: Exception) {
             UsageStats(fetched = true, error = e.message ?: "Unknown error")
@@ -142,13 +178,25 @@ object DeepSeekUsageApi {
     // Sum token amounts for a specific usage type (e.g. "PROMPT_CACHE_HIT_TOKEN") from an array field
     private fun kotlinx.serialization.json.JsonObject.sumTypeTokens(field: String, type: String): Long {
         return get(field)?.jsonArray?.sumOf { modelEntry ->
-            modelEntry.jsonObject["usage"]?.jsonArray?.sumOf { usageEntry ->
-                val obj = usageEntry.jsonObject
-                if (obj["type"]?.jsonPrimitive?.content == type) {
-                    obj["amount"]?.jsonPrimitive?.content?.toLongOrNull() ?: 0L
-                } else 0L
-            } ?: 0L
+            modelEntry.jsonObject.sumTypeInModel(type)
         } ?: 0L
+    }
+
+    // Sum tokens of a specific type within a single model's JsonObject
+    private fun kotlinx.serialization.json.JsonObject.sumTypeInModel(type: String): Long {
+        return get("usage")?.jsonArray?.sumOf { usageEntry ->
+            val obj = usageEntry.jsonObject
+            if (obj["type"]?.jsonPrimitive?.content == type) {
+                obj["amount"]?.jsonPrimitive?.content?.toLongOrNull() ?: 0L
+            } else 0L
+        } ?: 0L
+    }
+
+    // Sum cost amounts for a single model entry (used for per-model cost)
+    private fun sumModelCostTokens(modelEntry: JsonElement): Double {
+        return modelEntry.jsonObject["usage"]?.jsonArray?.sumOf { usageEntry ->
+            usageEntry.jsonObject["amount"]?.jsonPrimitive?.content?.toDoubleOrNull() ?: 0.0
+        } ?: 0.0
     }
 
     private fun get(url: String, token: String): String? {
