@@ -114,12 +114,12 @@ class MainActivity : Activity() {
             setPadding(dp(8), dp(4), dp(8), dp(4))
         }
         val loadingBar = ProgressBar(this).apply { visibility = View.GONE }
-        val balanceText = textView("", 32, true, 0xFFA5B4FC.toInt())
-        val detailText = textView("", 14, false, 0xFF818CF8.toInt())
-        val usageText = textView("", 14, false, 0xFFA78BFA.toInt())
-        val todayText = textView("", 13, false, 0xFFC4B5FD.toInt())
-        val errorText = textView("", 14, false, 0xFFFF6B6B.toInt())
-        val timeText = textView("", 12, false, 0xFF6366F1.toInt())
+        val balanceText = textView("", 28, true, 0xFFA5B4FC.toInt())
+        val detailText = textView("", 13, false, 0xFF818CF8.toInt())
+        val usageText = textView("", 13, false, 0xFFA78BFA.toInt())
+        val todayText = textView("", 12, false, 0xFFC4B5FD.toInt())
+        val errorText = textView("", 13, false, 0xFFFF6B6B.toInt())
+        val timeText = textView("", 11, false, 0xFF6366F1.toInt())
 
         val balanceCard = sectionCard(0xFF1E1B4B.toInt()) {
             addView(row {
@@ -210,7 +210,7 @@ class MainActivity : Activity() {
 
         if (usage.error != null && usage.totalBalance == "0") {
             balanceText.text = "—"
-            errorText.text = usage.error
+            errorText.text = "⚠ ${usage.error}"
             errorText.visibility = View.VISIBLE
             detailText.visibility = View.GONE
             usageText.visibility = View.GONE
@@ -220,7 +220,7 @@ class MainActivity : Activity() {
             errorText.visibility = View.GONE
             detailText.visibility = View.GONE
             if (usage.monthlyTokens > 0) {
-                val costStr = if (usage.monthlyCost > 0) "  |  ¥${"%.2f".format(usage.monthlyCost)}" else ""
+                val costStr = if (usage.monthlyCost > 0) "  ¥${"%.2f".format(usage.monthlyCost)}" else ""
                 usageText.text = "本月 ${formatTokens(usage.monthlyTokens)} tokens$costStr"
                 usageText.visibility = View.VISIBLE
             } else {
@@ -229,17 +229,17 @@ class MainActivity : Activity() {
             todayText.text = formatTodayBreakdown(usage)
             todayText.visibility = if (usage.monthlyTokens > 0) View.VISIBLE else View.GONE
         } else {
-            balanceText.text = "${usage.totalBalance} ${usage.currency}"
+            balanceText.text = "余额 ${usage.totalBalance} ${usage.currency}"
             errorText.visibility = View.GONE
             if (usage.toppedUpBalance != "0" || usage.grantedBalance != "0") {
-                detailText.text = "充值 ${usage.toppedUpBalance} ${usage.currency}  |  赠送 ${usage.grantedBalance} ${usage.currency}"
+                detailText.text = "充值 ${usage.toppedUpBalance}  赠送 ${usage.grantedBalance}"
                 detailText.visibility = View.VISIBLE
             } else {
                 detailText.visibility = View.GONE
             }
             // Usage stats
             if (usage.monthlyTokens > 0) {
-                val costStr = if (usage.monthlyCost > 0) "  |  ¥${"%.2f".format(usage.monthlyCost)}" else ""
+                val costStr = if (usage.monthlyCost > 0) "  ¥${"%.2f".format(usage.monthlyCost)}" else ""
                 usageText.text = "本月 ${formatTokens(usage.monthlyTokens)} tokens$costStr"
                 usageText.visibility = View.VISIBLE
             } else {
@@ -249,7 +249,7 @@ class MainActivity : Activity() {
             todayText.visibility = if (usage.monthlyTokens > 0) View.VISIBLE else View.GONE
         }
         timeText.text = if (usage.lastUpdated > 0) {
-            "最后更新: ${SimpleDateFormat("MM-dd HH:mm:ss", Locale.getDefault()).format(Date(usage.lastUpdated))}"
+            "更新于 ${SimpleDateFormat("MM-dd HH:mm", Locale.getDefault()).format(Date(usage.lastUpdated))}"
         } else {
             "等待首次加载..."
         }
