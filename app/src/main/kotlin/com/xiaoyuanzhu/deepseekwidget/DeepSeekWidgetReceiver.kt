@@ -96,15 +96,18 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
                 ),
                 modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
             )
-            Text(
-                text = usage.todayDisplay(),
-                style = TextStyle(
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = ColorProvider(R.color.widget_detail)
-                ),
-                modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
-            )
+            val todayStr = usage.todayDisplay()
+            if (todayStr.isNotEmpty()) {
+                Text(
+                    text = todayStr,
+                    style = TextStyle(
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = ColorProvider(R.color.widget_detail)
+                    ),
+                    modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
+                )
+            }
         } else if (usage.error != null && usage.totalBalance == "0") {
             Text(
                 text = usage.errorDisplay(),

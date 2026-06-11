@@ -67,17 +67,19 @@ fun UsageSnapshot.todayDisplay(): String {
         if (todayResponseTokens > 0) parts.add("输出 ${formatTokens(todayResponseTokens)}")
         val costStr = if (todayCost > 0) "  ¥${"%.2f".format(todayCost)}" else ""
         val detail = parts.joinToString("  ")
-        return if (detail.isNotEmpty() || costStr.isNotEmpty()) "今日 $detail$costStr" else "今日 0 tokens"
+        return if (detail.isNotEmpty() || costStr.isNotEmpty()) "今日 $detail$costStr" else ""
     }
-    val lines = todayModels.map { m ->
-        val parts = mutableListOf<String>()
-        if (m.cacheHitTokens > 0) parts.add("命中 ${formatTokens(m.cacheHitTokens)}")
-        if (m.cacheMissTokens > 0) parts.add("未命中 ${formatTokens(m.cacheMissTokens)}")
-        if (m.responseTokens > 0) parts.add("输出 ${formatTokens(m.responseTokens)}")
-        val costStr = if (m.cost > 0) "  ¥${"%.2f".format(m.cost)}" else ""
-        "${m.model} ${parts.joinToString("  ")}${costStr}"
-    }
-    return "今日\n${lines.joinToString("\n")}"
+    val lines = todayModels
+        .filter { it.totalTokens > 0 }
+        .map { m ->
+            val parts = mutableListOf<String>()
+            if (m.cacheHitTokens > 0) parts.add("命中 ${formatTokens(m.cacheHitTokens)}")
+            if (m.cacheMissTokens > 0) parts.add("未命中 ${formatTokens(m.cacheMissTokens)}")
+            if (m.responseTokens > 0) parts.add("输出 ${formatTokens(m.responseTokens)}")
+            val costStr = if (m.cost > 0) "  ¥${"%.2f".format(m.cost)}" else ""
+            "${m.model} ${parts.joinToString("  ")}${costStr}"
+        }
+    return if (lines.isNotEmpty()) "今日\n${lines.joinToString("\n")}" else ""
 }
 
 fun UsageSnapshot.timeDisplay(): String =

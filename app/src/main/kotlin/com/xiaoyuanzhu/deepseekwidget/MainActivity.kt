@@ -222,8 +222,9 @@ class MainActivity : Activity() {
             errorText.visibility = View.GONE
             usageText.text = usage.monthlyDisplay()
             usageText.visibility = View.VISIBLE
-            todayText.text = usage.todayDisplay()
-            todayText.visibility = View.VISIBLE
+            val td = usage.todayDisplay()
+            todayText.text = td
+            todayText.visibility = if (td.isNotEmpty()) View.VISIBLE else View.GONE
         } else if (usage.error != null && usage.totalBalance == "0") {
             balanceText.text = "—"
             balanceText.visibility = View.VISIBLE
