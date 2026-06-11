@@ -11,10 +11,11 @@ Android 桌面小部件，显示 DeepSeek API 余额和用量统计。
 
 ## 使用
 
-1. 安装 APK 后打开 App
-2. 在 [DeepSeek Platform](https://platform.deepseek.com/api_keys) 创建 API Key 并填入
-3. （可选）在 platform.deepseek.com/usage 页面，F12 → Network → 找到 `/api/v0/usage` 请求，复制 `Authorization: Bearer` 后面的 token 填入
-4. 返回桌面，长按 → 添加小部件 → 找到"DeepSeek 用量卡片"拖放到桌面
+1. 使用 Android Studio 或其他工具自行构建 APK
+2. 安装 APK 后打开 App
+3. 在 [DeepSeek Platform](https://platform.deepseek.com/api_keys) 创建 API Key 并填入
+4. （可选）在 platform.deepseek.com/usage 页面，F12 → Network → 找到 `/api/v0/usage` 请求，复制 `Authorization: Bearer` 后面的 token 填入
+5. 返回桌面，长按 → 添加小部件 → 找到"DeepSeek 用量卡片"拖放到桌面
 
 ## 说明
 
