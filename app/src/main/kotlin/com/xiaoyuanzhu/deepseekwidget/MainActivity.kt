@@ -103,22 +103,22 @@ class MainActivity : Activity() {
         root.addView(space(16))
 
         // Balance card
-        val balanceTitle = textView("当前余额", 18, true, 0xFFFFFFFF.toInt())
+        val balanceTitle = textView("当前余额", 18, true, 0xFF1E1B4B.toInt())
         val refreshBtn = Button(this).apply {
             text = "刷新"
-            setTextColor(0xFF818CF8.toInt())
+            setTextColor(0xFF4D6BFE.toInt())
             setBackgroundColor(0x00000000)
             setPadding(dp(8), dp(4), dp(8), dp(4))
         }
         val loadingBar = ProgressBar(this).apply { visibility = View.GONE }
-        val balanceText = textView("", 28, true, 0xFFA5B4FC.toInt())
-        val detailText = textView("", 13, false, 0xFF818CF8.toInt())
-        val usageText = textView("", 13, false, 0xFFA78BFA.toInt())
-        val todayText = textView("", 11, false, 0xFFC4B5FD.toInt())
-        val errorText = textView("", 13, false, 0xFFFF6B6B.toInt())
-        val timeText = textView("", 11, false, 0xFF6366F1.toInt())
+        val balanceText = textView("", 28, true, 0xFF1E1B4B.toInt())
+        val detailText = textView("", 13, false, 0xFF64748B.toInt())
+        val usageText = textView("", 13, false, 0xFF4D6BFE.toInt())
+        val todayText = textView("", 11, false, 0xFF64748B.toInt())
+        val errorText = textView("", 13, false, 0xFFEF4444.toInt())
+        val timeText = textView("", 11, false, 0xFF94A3B8.toInt())
 
-        val balanceCard = sectionCard(0xFF1E1B4B.toInt()) {
+        val balanceCard = sectionCard(0xFFFFFFFF.toInt()) {
             addView(row {
                 addView(balanceTitle, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
                 addView(refreshBtn)

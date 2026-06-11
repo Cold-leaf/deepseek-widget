@@ -76,7 +76,7 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
             .padding(R.dimen.glance_padding_16)
     ) {
         Text(
-            text = "🧠 DeepSeek",
+            text = "🐋 DeepSeek",
             style = TextStyle(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
