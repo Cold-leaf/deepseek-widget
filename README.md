@@ -9,6 +9,8 @@ Android 桌面小部件，显示 DeepSeek API 余额和用量统计。
 - 每 15 分钟自动刷新
 - 可单独使用 API Key 或用法 Token，也可同时填入
 
+![预览](preview.jpg)
+
 ## 使用
 
 1. 使用 Android Studio 或其他工具自行构建 APK
