@@ -160,6 +160,11 @@ class MainActivity : Activity() {
         })
 
         scrollView.addView(root)
+        val statusBarH = run {
+            val id = resources.getIdentifier("status_bar_height", "dimen", "android")
+            if (id > 0) resources.getDimensionPixelSize(id) else 0
+        }
+        scrollView.setPadding(0, statusBarH, 0, 0)
         setContentView(scrollView)
 
         // Load saved data
