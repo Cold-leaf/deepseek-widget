@@ -130,14 +130,15 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
                 )
             }
 
-        if (usage.todayTokens > 0) {
+        if (usage.monthlyTokens > 0) {
                 val parts = mutableListOf<String>()
                 if (usage.todayCacheHitTokens > 0) parts.add("命中 ${formatTokens(usage.todayCacheHitTokens)}")
                 if (usage.todayCacheMissTokens > 0) parts.add("未命中 ${formatTokens(usage.todayCacheMissTokens)}")
                 if (usage.todayResponseTokens > 0) parts.add("输出 ${formatTokens(usage.todayResponseTokens)}")
                 val costStr = if (usage.todayCost > 0) "  ¥${"%.2f".format(usage.todayCost)}" else ""
+                val detail = parts.joinToString("  ")
                 Text(
-                    text = "今日 ${parts.joinToString("  ")}${costStr}",
+                    text = if (detail.isNotEmpty() || costStr.isNotEmpty()) "今日 $detail$costStr" else "今日 0 tokens",
                     style = TextStyle(
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Normal,

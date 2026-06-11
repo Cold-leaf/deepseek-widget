@@ -227,7 +227,7 @@ class MainActivity : Activity() {
                 usageText.visibility = View.GONE
             }
             todayText.text = formatTodayBreakdown(usage)
-            todayText.visibility = if (usage.todayTokens > 0) View.VISIBLE else View.GONE
+            todayText.visibility = if (usage.monthlyTokens > 0) View.VISIBLE else View.GONE
         } else {
             balanceText.text = "${usage.totalBalance} ${usage.currency}"
             errorText.visibility = View.GONE
@@ -246,7 +246,7 @@ class MainActivity : Activity() {
                 usageText.visibility = View.GONE
             }
             todayText.text = formatTodayBreakdown(usage)
-            todayText.visibility = if (usage.todayTokens > 0) View.VISIBLE else View.GONE
+            todayText.visibility = if (usage.monthlyTokens > 0) View.VISIBLE else View.GONE
         }
         timeText.text = if (usage.lastUpdated > 0) {
             "最后更新: ${SimpleDateFormat("MM-dd HH:mm:ss", Locale.getDefault()).format(Date(usage.lastUpdated))}"
@@ -269,7 +269,8 @@ class MainActivity : Activity() {
         if (u.todayCacheMissTokens > 0) parts.add("未命中 ${formatTokens(u.todayCacheMissTokens)}")
         if (u.todayResponseTokens > 0) parts.add("输出 ${formatTokens(u.todayResponseTokens)}")
         val costStr = if (u.todayCost > 0) "  ¥${"%.2f".format(u.todayCost)}" else ""
-        return "今日 ${parts.joinToString("  ")}${costStr}"
+        val detail = parts.joinToString("  ")
+        return if (detail.isNotEmpty() || costStr.isNotEmpty()) "今日 $detail$costStr" else "今日 0 tokens"
     }
 
     private fun space(h: Int) = View(this).apply {
