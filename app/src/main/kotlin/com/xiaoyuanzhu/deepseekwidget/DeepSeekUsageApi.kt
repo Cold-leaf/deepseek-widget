@@ -1,8 +1,9 @@
 package com.xiaoyuanzhu.deepseekwidget
 
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -10,12 +11,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
-
-/**
- * Internal DeepSeek dashboard API (session-token authenticated).
- * Token expires; extract from browser DevTools → Application → Cookies → "session_id" (or similar).
- * Pass the raw Cookie header string, e.g. "session_id=abc123; ..."
- */
 
 data class UsageStats(
     val totalTokensMonth: Long = 0,
@@ -27,7 +22,7 @@ data class UsageStats(
 )
 
 data class DailyAmount(
-    val date: String,       // "2026-06-01"
+    val date: String,
     val tokens: Long,
     val cost: Double
 )
@@ -48,104 +43,76 @@ object DeepSeekUsageApi {
         val year = now.get(Calendar.YEAR)
 
         try {
-            val summary = fetchUserSummary(usageToken)
-            val amounts = fetchUsageAmount(usageToken, month, year)
-            val costs = fetchUsageCost(usageToken, month, year)
+            val amountBody = get("$BASE/api/v0/usage/amount?month=$month&year=$year", usageToken)
+            val costBody = get("$BASE/api/v0/usage/cost?month=$month&year=$year", usageToken)
 
-            if (summary.first.isEmpty() && amounts.isEmpty() && costs.isEmpty()) {
-                return UsageStats(
-                    fetched = true,
-                    error = "Cookie 无效或 API 端点已变更，请重新获取 Cookie"
-                )
+            if (amountBody == null && costBody == null) {
+                return UsageStats(fetched = true, error = "Token 无效或 API 不可达")
             }
 
-            val dailyCostMap = costs.associate { it.first to it.second }
-            val dailyList = amounts.map { (date, tokens) ->
-                DailyAmount(date, tokens, dailyCostMap[date] ?: 0.0)
+            val amountBiz = amountBody?.let { body ->
+                json.parseToJsonElement(body).jsonObject["data"]
+                    ?.jsonObject?.get("biz_data")?.jsonObject
+            }
+            val costBiz = costBody?.let { body ->
+                json.parseToJsonElement(body).jsonObject["data"]
+                    ?.jsonObject?.get("biz_data")?.jsonArray?.firstOrNull()?.jsonObject
+            }
+
+            // Total tokens: sum all usage[*].amount across all models in total[]
+            val totalTokens = amountBiz?.sumUsageTokens("total") ?: 0L
+            val totalCost = costBiz?.sumUsageCost("total") ?: 0.0
+
+            // Top model: model with highest total token usage
+            val topModel = amountBiz?.get("total")?.jsonArray?.maxByOrNull { modelEntry ->
+                sumModelTokens(modelEntry)
+            }?.jsonObject?.get("model")?.jsonPrimitive?.content ?: ""
+
+            // Daily breakdown
+            val amountDays = amountBiz?.get("days")?.jsonArray ?: JsonArray(emptyList())
+            val costDaysMap = costBiz?.get("days")?.jsonArray?.associate { dayEntry ->
+                val obj = dayEntry.jsonObject
+                val date = obj["date"]?.jsonPrimitive?.content ?: ""
+                date to obj.sumUsageCost("data")
+            } ?: emptyMap()
+
+            val dailyList = amountDays.mapNotNull { dayEntry ->
+                val obj = dayEntry.jsonObject
+                val date = obj["date"]?.jsonPrimitive?.content ?: return@mapNotNull null
+                DailyAmount(date, obj.sumUsageTokens("data"), costDaysMap[date] ?: 0.0)
             }.sortedBy { it.date }
 
-            return UsageStats(
-                totalTokensMonth = amounts.sumOf { it.second },
-                totalCostMonth = costs.sumOf { it.second },
-                topModel = summary.first,
+            UsageStats(
+                totalTokensMonth = totalTokens,
+                totalCostMonth = totalCost,
+                topModel = topModel,
                 dailyAmounts = dailyList,
                 fetched = true
             )
         } catch (e: Exception) {
-            return UsageStats(
-                fetched = true,
-                error = e.message ?: "Unknown error fetching dashboard data"
-            )
+            UsageStats(fetched = true, error = e.message ?: "Unknown error")
         }
     }
 
-    // Returns Pair<topModelName, rawJsonString>
-    private fun fetchUserSummary(token: String): Pair<String, String> {
-        val body = get("$BASE/api/v0/users/get_user_summary", token)
-            ?: return "" to ""
-        val root = json.parseToJsonElement(body).jsonObject
-        val data = root["data"]?.jsonObject ?: return "" to ""
-        // Best effort: look for model/most_used_model fields
-        val model = data["model"]?.jsonPrimitive?.content
-            ?: data["most_used_model"]?.jsonPrimitive?.content
-            ?: data["top_model"]?.jsonPrimitive?.content ?: ""
-        return model to body
+    // Sum token amounts from array field (e.g. "total" or "data") across all models
+    private fun kotlinx.serialization.json.JsonObject.sumUsageTokens(field: String): Long {
+        return get(field)?.jsonArray?.sumOf { sumModelTokens(it) } ?: 0L
     }
 
-    // Returns list of Pair<dateString, tokenCount>
-    private fun fetchUsageAmount(token: String, month: Int, year: Int): List<Pair<String, Long>> {
-        val body = get("$BASE/api/v0/usage/amount?month=$month&year=$year", token)
-            ?: return emptyList()
-        return parseDataList(body) { entry ->
-            val date = entry.jsonObject["date"]?.jsonPrimitive?.content
-                ?: entry.jsonObject["day"]?.jsonPrimitive?.content
-                ?: entry.jsonObject["time"]?.jsonPrimitive?.content
-                ?: return@parseDataList null
-            val tokens = entry.jsonObject["amount"]?.jsonPrimitive?.content?.toLongOrNull()
-                ?: entry.jsonObject["tokens"]?.jsonPrimitive?.content?.toLongOrNull()
-                ?: entry.jsonObject["total_tokens"]?.jsonPrimitive?.content?.toLongOrNull()
-                ?: return@parseDataList null
-            date to tokens
-        }
+    // Sum cost amounts (Double) from array field
+    private fun kotlinx.serialization.json.JsonObject.sumUsageCost(field: String): Double {
+        return get(field)?.jsonArray?.sumOf { modelEntry ->
+            modelEntry.jsonObject["usage"]?.jsonArray?.sumOf { usageEntry ->
+                usageEntry.jsonObject["amount"]?.jsonPrimitive?.content?.toDoubleOrNull() ?: 0.0
+            } ?: 0.0
+        } ?: 0.0
     }
 
-    // Returns list of Pair<dateString, costDouble>
-    private fun fetchUsageCost(token: String, month: Int, year: Int): List<Pair<String, Double>> {
-        val body = get("$BASE/api/v0/usage/cost?month=$month&year=$year", token)
-            ?: return emptyList()
-        return parseDataList(body) { entry ->
-            val date = entry.jsonObject["date"]?.jsonPrimitive?.content
-                ?: entry.jsonObject["day"]?.jsonPrimitive?.content
-                ?: return@parseDataList null
-            val cost = entry.jsonObject["cost"]?.jsonPrimitive?.content?.toDoubleOrNull()
-                ?: entry.jsonObject["amount"]?.jsonPrimitive?.content?.toDoubleOrNull()
-                ?: return@parseDataList null
-            date to cost
-        }
-    }
-
-    private fun <T> parseDataList(rawJson: String, mapper: (kotlinx.serialization.json.JsonElement) -> T?): List<T> {
-        val root = json.parseToJsonElement(rawJson).jsonObject
-        val data = root["data"] ?: return emptyList()
-        if (data is kotlinx.serialization.json.JsonNull) return emptyList()
-        return when {
-            data is kotlinx.serialization.json.JsonArray -> data.mapNotNull {
-                if (it is kotlinx.serialization.json.JsonNull) null else mapper(it)
-            }
-            data.jsonObject["list"]?.takeIf { it !is kotlinx.serialization.json.JsonNull }?.jsonArray != null ->
-                data.jsonObject["list"]!!.jsonArray.mapNotNull {
-                    if (it is kotlinx.serialization.json.JsonNull) null else mapper(it)
-                }
-            data.jsonObject["items"]?.takeIf { it !is kotlinx.serialization.json.JsonNull }?.jsonArray != null ->
-                data.jsonObject["items"]!!.jsonArray.mapNotNull {
-                    if (it is kotlinx.serialization.json.JsonNull) null else mapper(it)
-                }
-            data.jsonObject["records"]?.takeIf { it !is kotlinx.serialization.json.JsonNull }?.jsonArray != null ->
-                data.jsonObject["records"]!!.jsonArray.mapNotNull {
-                    if (it is kotlinx.serialization.json.JsonNull) null else mapper(it)
-                }
-            else -> emptyList()
-        }
+    // Sum token amounts for a single model entry
+    private fun sumModelTokens(modelEntry: JsonElement): Long {
+        return modelEntry.jsonObject["usage"]?.jsonArray?.sumOf { usageEntry ->
+            usageEntry.jsonObject["amount"]?.jsonPrimitive?.content?.toLongOrNull() ?: 0L
+        } ?: 0L
     }
 
     private fun get(url: String, token: String): String? {
