@@ -82,7 +82,8 @@ fun UsageSnapshot.monthlySegments(): List<TextSegment> {
     )
     if (monthlyCost > 0) {
         segments.add(TextSegment("  ", SegmentRole.ACCENT))
-        segments.add(TextSegment("¥${"%.2f".format(monthlyCost)}", SegmentRole.ACCENT))
+        segments.add(TextSegment("¥", SegmentRole.ACCENT))
+        segments.add(TextSegment("${"%.2f".format(monthlyCost)}", SegmentRole.VALUE))
     }
     return segments
 }
@@ -106,7 +107,8 @@ fun UsageSnapshot.todaySegments(): List<List<TextSegment>> {
         }
         if (todayCost > 0) {
             if (parts.isNotEmpty()) parts.add(TextSegment("  ", SegmentRole.ACCENT))
-            parts.add(TextSegment("¥${"%.2f".format(todayCost)}", SegmentRole.ACCENT))
+            parts.add(TextSegment("¥", SegmentRole.ACCENT))
+            parts.add(TextSegment("${"%.2f".format(todayCost)}", SegmentRole.VALUE))
         }
         if (parts.isEmpty()) return emptyList()
         return listOf(listOf(TextSegment("今日 ", SegmentRole.LABEL)) + parts)
@@ -129,7 +131,8 @@ fun UsageSnapshot.todaySegments(): List<List<TextSegment>> {
         }
         if (m.cost > 0) {
             segs.add(TextSegment("  ", SegmentRole.ACCENT))
-            segs.add(TextSegment("¥${"%.2f".format(m.cost)}", SegmentRole.ACCENT))
+            segs.add(TextSegment("¥", SegmentRole.ACCENT))
+            segs.add(TextSegment("${"%.2f".format(m.cost)}", SegmentRole.VALUE))
         }
         lines.add(segs)
     }
