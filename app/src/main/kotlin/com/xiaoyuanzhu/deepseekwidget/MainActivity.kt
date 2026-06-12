@@ -309,6 +309,7 @@ class MainActivity : Activity() {
         return spannable
     }
 
+    @JvmName("toSpannableMultiLine")
     private fun List<List<TextSegment>>.toSpannable(): android.text.SpannableString {
         val sb = StringBuilder()
         val spans = mutableListOf<Triple<Int, Int, Int>>()
