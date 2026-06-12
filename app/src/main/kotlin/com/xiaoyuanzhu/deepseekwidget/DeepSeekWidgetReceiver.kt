@@ -100,77 +100,78 @@ private fun WidgetContent(context: Context, usage: UsageSnapshot) {
 
         if (usage.monthlyTokens > 0) {
             // Token is working — show only usage info
-            Text(
-                text = usage.monthlyDisplay(),
-                style = TextStyle(
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = ColorProvider(R.color.widget_usage)
-                ),
-                modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
+            SegmentedRow(
+                segments = usage.monthlySegments(),
+                fontSize = 13,
+                bottomPadding = R.dimen.glance_spacer_4
             )
-            val todayStr = usage.todayDisplay()
-            if (todayStr.isNotEmpty()) {
-                Text(
-                    text = todayStr,
-                    style = TextStyle(
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = ColorProvider(R.color.widget_detail)
-                    ),
-                    modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
-                )
+            val todayLines = usage.todaySegments()
+            if (todayLines.isNotEmpty()) {
+                for ((idx, line) in todayLines.withIndex()) {
+                    SegmentedRow(
+                        segments = line,
+                        fontSize = 10,
+                        bottomPadding = if (idx == todayLines.lastIndex) R.dimen.glance_spacer_4 else null
+                    )
+                }
             }
         } else if (usage.error != null && usage.totalBalance == "0") {
-            Text(
-                text = usage.errorDisplay(),
-                style = TextStyle(
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = ColorProvider(R.color.widget_error)
-                )
+            SegmentedRow(
+                segments = usage.errorSegments(),
+                fontSize = 13
             )
         } else if (usage.totalBalance != "0") {
             // Balance available, token not working
-            Text(
-                text = usage.balanceDisplay(),
-                style = TextStyle(
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ColorProvider(R.color.widget_text)
-                ),
-                modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
+            SegmentedRow(
+                segments = usage.balanceSegments(),
+                fontSize = 28,
+                fontWeight = FontWeight.Bold,
+                bottomPadding = R.dimen.glance_spacer_4
             )
-            if (usage.toppedUpBalance != "0" || usage.grantedBalance != "0") {
-                Text(
-                    text = usage.detailDisplay(),
-                    style = TextStyle(
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = ColorProvider(R.color.widget_detail)
-                    ),
-                    modifier = GlanceModifier.padding(bottom = R.dimen.glance_spacer_4)
+            val detail = usage.detailSegments()
+            if (detail.isNotEmpty()) {
+                SegmentedRow(
+                    segments = detail,
+                    fontSize = 13,
+                    bottomPadding = R.dimen.glance_spacer_4
                 )
             }
             if (usage.tokenError != null) {
-                Text(
-                    text = "⚠ ${usage.tokenError}",
-                    style = TextStyle(
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = ColorProvider(R.color.widget_error)
-                    )
+                SegmentedRow(
+                    segments = listOf(TextSegment("⚠ ${usage.tokenError}", SegmentRole.ERROR)),
+                    fontSize = 13
                 )
             }
         }
 
-        Text(
-            text = usage.timeDisplay(),
-            style = TextStyle(
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Normal,
-                color = ColorProvider(R.color.widget_time)
-            )
+        SegmentedRow(
+            segments = usage.timeSegments(),
+            fontSize = 11
         )
+    }
+}
+
+@Composable
+private fun SegmentedRow(
+    segments: List<TextSegment>,
+    fontSize: Int,
+    fontWeight: FontWeight = FontWeight.Normal,
+    bottomPadding: Int? = null
+) {
+    if (segments.isEmpty()) return
+    val modifier = if (bottomPadding != null) {
+        GlanceModifier.padding(bottom = bottomPadding)
+    } else GlanceModifier
+    Row(modifier = modifier) {
+        segments.forEach { seg ->
+            Text(
+                text = seg.text,
+                style = TextStyle(
+                    fontSize = fontSize.sp,
+                    fontWeight = fontWeight,
+                    color = ColorProvider(roleColorRes(seg.role))
+                )
+            )
+        }
     }
 }

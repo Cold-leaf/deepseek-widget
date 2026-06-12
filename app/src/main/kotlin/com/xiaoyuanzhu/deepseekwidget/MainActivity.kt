@@ -233,25 +233,30 @@ class MainActivity : Activity() {
             balanceText.visibility = View.GONE
             detailText.visibility = View.GONE
             errorText.visibility = View.GONE
-            usageText.text = usage.monthlyDisplay()
+            usageText.text = usage.monthlySegments().toSpannable()
             usageText.visibility = View.VISIBLE
-            val td = usage.todayDisplay()
-            todayText.text = td
-            todayText.visibility = if (td.isNotEmpty()) View.VISIBLE else View.GONE
+            val td = usage.todaySegments()
+            if (td.isNotEmpty()) {
+                todayText.text = td.toSpannable()
+                todayText.visibility = View.VISIBLE
+            } else {
+                todayText.visibility = View.GONE
+            }
         } else if (usage.error != null && usage.totalBalance == "0") {
             balanceText.text = "—"
             balanceText.visibility = View.VISIBLE
-            errorText.text = usage.errorDisplay()
+            errorText.text = usage.errorSegments().toSpannable()
             errorText.visibility = View.VISIBLE
             detailText.visibility = View.GONE
             usageText.visibility = View.GONE
             todayText.visibility = View.GONE
         } else if (usage.totalBalance != "0" && usage.currency != "—") {
             // Balance available, token not working
-            balanceText.text = usage.balanceDisplay()
+            balanceText.text = usage.balanceSegments().toSpannable()
             balanceText.visibility = View.VISIBLE
-            if (usage.toppedUpBalance != "0" || usage.grantedBalance != "0") {
-                detailText.text = usage.detailDisplay()
+            val detail = usage.detailSegments()
+            if (detail.isNotEmpty()) {
+                detailText.text = detail.toSpannable()
                 detailText.visibility = View.VISIBLE
             } else {
                 detailText.visibility = View.GONE
@@ -259,7 +264,7 @@ class MainActivity : Activity() {
             usageText.visibility = View.GONE
             todayText.visibility = View.GONE
             if (usage.tokenError != null) {
-                errorText.text = "⚠ ${usage.tokenError}"
+                errorText.text = listOf(TextSegment("⚠ ${usage.tokenError}", SegmentRole.ERROR)).toSpannable()
                 errorText.visibility = View.VISIBLE
             } else {
                 errorText.visibility = View.GONE
@@ -271,13 +276,58 @@ class MainActivity : Activity() {
             usageText.visibility = View.GONE
             todayText.visibility = View.GONE
             if (usage.tokenError != null) {
-                errorText.text = "⚠ ${usage.tokenError}"
+                errorText.text = listOf(TextSegment("⚠ ${usage.tokenError}", SegmentRole.ERROR)).toSpannable()
                 errorText.visibility = View.VISIBLE
             } else {
                 errorText.visibility = View.GONE
             }
         }
-        timeText.text = usage.timeDisplay()
+        timeText.text = usage.timeSegments().toSpannable()
+    }
+
+    private fun roleColorInt(role: SegmentRole): Int = when (role) {
+        SegmentRole.LABEL -> 0xFF818CF8.toInt()
+        SegmentRole.VALUE -> 0xFF3730A3.toInt()
+        SegmentRole.ACCENT -> 0xFF4D6BFE.toInt()
+        SegmentRole.MODEL -> 0xFF4F46E5.toInt()
+        SegmentRole.ERROR -> 0xFFEF4444.toInt()
+    }
+
+    private fun List<TextSegment>.toSpannable(): android.text.SpannableString {
+        val full = joinToString("") { it.text }
+        val spannable = android.text.SpannableString(full)
+        var pos = 0
+        for (seg in this) {
+            val color = roleColorInt(seg.role)
+            spannable.setSpan(
+                android.text.style.ForegroundColorSpan(color),
+                pos, pos + seg.text.length,
+                android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            pos += seg.text.length
+        }
+        return spannable
+    }
+
+    private fun List<List<TextSegment>>.toSpannable(): android.text.SpannableString {
+        val sb = StringBuilder()
+        val spans = mutableListOf<Triple<Int, Int, Int>>()
+        for (i in this.indices) {
+            if (i > 0) sb.append("\n")
+            for (seg in this[i]) {
+                val start = sb.length
+                sb.append(seg.text)
+                spans.add(Triple(start, sb.length, roleColorInt(seg.role)))
+            }
+        }
+        val spannable = android.text.SpannableString(sb.toString())
+        for ((s, e, color) in spans) {
+            spannable.setSpan(
+                android.text.style.ForegroundColorSpan(color),
+                s, e, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+        return spannable
     }
 
     private fun space(h: Int) = View(this).apply {

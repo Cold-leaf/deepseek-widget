@@ -44,49 +44,117 @@ data class UsageSnapshot(
 
 // Shared formatting — both widget and app preview use these
 
+enum class SegmentRole { LABEL, VALUE, ACCENT, MODEL, ERROR }
+
+data class TextSegment(val text: String, val role: SegmentRole)
+
 fun formatTokens(count: Long): String = when {
     count >= 1_000_000 -> "${"%.1f".format(count / 1_000_000.0)}M"
     count >= 1_000 -> "${"%.1f".format(count / 1_000.0)}K"
     else -> count.toString()
 }
 
-fun UsageSnapshot.balanceDisplay(): String = "余额 $totalBalance $currency"
+fun UsageSnapshot.balanceSegments(): List<TextSegment> = listOf(
+    TextSegment("余额 ", SegmentRole.LABEL),
+    TextSegment(totalBalance, SegmentRole.VALUE),
+    TextSegment(" $currency", SegmentRole.ACCENT)
+)
 
-fun UsageSnapshot.detailDisplay(): String = "充值 $toppedUpBalance  赠送 $grantedBalance"
-
-fun UsageSnapshot.monthlyDisplay(): String {
-    val costStr = if (monthlyCost > 0) "  ¥${"%.2f".format(monthlyCost)}" else ""
-    return "本月 ${formatTokens(monthlyTokens)} tokens$costStr"
-}
-
-fun UsageSnapshot.todayDisplay(): String {
-    if (todayModels.isEmpty()) {
-        val parts = mutableListOf<String>()
-        if (todayCacheHitTokens > 0) parts.add("命中 ${formatTokens(todayCacheHitTokens)}")
-        if (todayCacheMissTokens > 0) parts.add("未命中 ${formatTokens(todayCacheMissTokens)}")
-        if (todayResponseTokens > 0) parts.add("输出 ${formatTokens(todayResponseTokens)}")
-        val costStr = if (todayCost > 0) "  ¥${"%.2f".format(todayCost)}" else ""
-        val detail = parts.joinToString("  ")
-        return if (detail.isNotEmpty() || costStr.isNotEmpty()) "今日 $detail$costStr" else ""
+fun UsageSnapshot.detailSegments(): List<TextSegment> {
+    val segments = mutableListOf<TextSegment>()
+    if (toppedUpBalance != "0" && toppedUpBalance != totalBalance) {
+        segments.add(TextSegment("充值 ", SegmentRole.LABEL))
+        segments.add(TextSegment(toppedUpBalance, SegmentRole.VALUE))
     }
-    val lines = todayModels
-        .filter { it.totalTokens > 0 }
-        .map { m ->
-            val parts = mutableListOf<String>()
-            if (m.cacheHitTokens > 0) parts.add("命中 ${formatTokens(m.cacheHitTokens)}")
-            if (m.cacheMissTokens > 0) parts.add("未命中 ${formatTokens(m.cacheMissTokens)}")
-            if (m.responseTokens > 0) parts.add("输出 ${formatTokens(m.responseTokens)}")
-            val costStr = if (m.cost > 0) "  ¥${"%.2f".format(m.cost)}" else ""
-            "${m.model} ${parts.joinToString("  ")}${costStr}"
-        }
-    return if (lines.isNotEmpty()) "今日\n${lines.joinToString("\n")}" else ""
+    if (grantedBalance != "0") {
+        if (segments.isNotEmpty()) segments.add(TextSegment("  ", SegmentRole.ACCENT))
+        segments.add(TextSegment("赠送 ", SegmentRole.LABEL))
+        segments.add(TextSegment(grantedBalance, SegmentRole.VALUE))
+    }
+    return segments
 }
 
-fun UsageSnapshot.timeDisplay(): String =
-    if (lastUpdated > 0) "更新于 ${SimpleDateFormat("MM-dd HH:mm", Locale.getDefault()).format(Date(lastUpdated))}"
-    else "等待首次加载..."
+fun UsageSnapshot.monthlySegments(): List<TextSegment> {
+    val segments = mutableListOf(
+        TextSegment("本月 ", SegmentRole.LABEL),
+        TextSegment(formatTokens(monthlyTokens), SegmentRole.VALUE),
+        TextSegment(" tokens", SegmentRole.ACCENT)
+    )
+    if (monthlyCost > 0) {
+        segments.add(TextSegment("  ", SegmentRole.ACCENT))
+        segments.add(TextSegment("¥${"%.2f".format(monthlyCost)}", SegmentRole.ACCENT))
+    }
+    return segments
+}
 
-fun UsageSnapshot.errorDisplay(): String = "⚠ $error"
+fun UsageSnapshot.todaySegments(): List<List<TextSegment>> {
+    if (todayModels.isEmpty()) {
+        val parts = mutableListOf<TextSegment>()
+        if (todayCacheHitTokens > 0) {
+            parts.add(TextSegment("命中 ", SegmentRole.LABEL))
+            parts.add(TextSegment(formatTokens(todayCacheHitTokens), SegmentRole.VALUE))
+        }
+        if (todayCacheMissTokens > 0) {
+            if (parts.isNotEmpty()) parts.add(TextSegment("  ", SegmentRole.ACCENT))
+            parts.add(TextSegment("未命中 ", SegmentRole.LABEL))
+            parts.add(TextSegment(formatTokens(todayCacheMissTokens), SegmentRole.VALUE))
+        }
+        if (todayResponseTokens > 0) {
+            if (parts.isNotEmpty()) parts.add(TextSegment("  ", SegmentRole.ACCENT))
+            parts.add(TextSegment("输出 ", SegmentRole.LABEL))
+            parts.add(TextSegment(formatTokens(todayResponseTokens), SegmentRole.VALUE))
+        }
+        if (todayCost > 0) {
+            if (parts.isNotEmpty()) parts.add(TextSegment("  ", SegmentRole.ACCENT))
+            parts.add(TextSegment("¥${"%.2f".format(todayCost)}", SegmentRole.ACCENT))
+        }
+        if (parts.isEmpty()) return emptyList()
+        return listOf(listOf(TextSegment("今日 ", SegmentRole.LABEL)) + parts)
+    }
+    val lines = mutableListOf<List<TextSegment>>()
+    lines.add(listOf(TextSegment("今日", SegmentRole.LABEL)))
+    for (m in todayModels.filter { it.totalTokens > 0 }) {
+        val segs = mutableListOf(TextSegment("  ${m.model}", SegmentRole.MODEL))
+        if (m.cacheHitTokens > 0) {
+            segs.add(TextSegment("  命中 ", SegmentRole.LABEL))
+            segs.add(TextSegment(formatTokens(m.cacheHitTokens), SegmentRole.VALUE))
+        }
+        if (m.cacheMissTokens > 0) {
+            segs.add(TextSegment("  未命中 ", SegmentRole.LABEL))
+            segs.add(TextSegment(formatTokens(m.cacheMissTokens), SegmentRole.VALUE))
+        }
+        if (m.responseTokens > 0) {
+            segs.add(TextSegment("  输出 ", SegmentRole.LABEL))
+            segs.add(TextSegment(formatTokens(m.responseTokens), SegmentRole.VALUE))
+        }
+        if (m.cost > 0) {
+            segs.add(TextSegment("  ", SegmentRole.ACCENT))
+            segs.add(TextSegment("¥${"%.2f".format(m.cost)}", SegmentRole.ACCENT))
+        }
+        lines.add(segs)
+    }
+    return lines
+}
+
+fun UsageSnapshot.timeSegments(): List<TextSegment> = listOf(
+    TextSegment(
+        if (lastUpdated > 0) "更新于 ${SimpleDateFormat("MM-dd HH:mm", Locale.getDefault()).format(Date(lastUpdated))}"
+        else "等待首次加载...",
+        SegmentRole.LABEL
+    )
+)
+
+fun UsageSnapshot.errorSegments(): List<TextSegment> = listOf(
+    TextSegment("⚠ ${error ?: ""}", SegmentRole.ERROR)
+)
+
+fun roleColorRes(role: SegmentRole): Int = when (role) {
+    SegmentRole.LABEL -> R.color.widget_label
+    SegmentRole.VALUE -> R.color.widget_value
+    SegmentRole.ACCENT -> R.color.widget_usage
+    SegmentRole.MODEL -> R.color.widget_title
+    SegmentRole.ERROR -> R.color.widget_error
+}
 
 object DeepSeekApi {
     private const val BASE_URL = "https://api.deepseek.com"
